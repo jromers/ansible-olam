@@ -26,8 +26,8 @@
         name: "{{ item }}"
         template: "{{ olvm_template }}"
         cluster: "{{ olvm_cluster | default('Default') }}"
-        memory: "{{ vm_ram }}"
-        cpu_sockets: "{{ vm_cpu }}"
+        memory: "{{ vm_ram | default('1024MiB') }}"
+        cpu_sockets: "{{ vm_cpu | default('1')  }}"
         high_availability: true
         state: running
         wait: yes
