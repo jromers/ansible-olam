@@ -3,9 +3,19 @@
 
 compute_instances:
   1:
-    instance_name: "oci-dev"
-    instance_ip: "10.0.1.100"
+    instance_name: "oci-node01"
+    instance_ip: "10.0.1.101"
     public_ip: false
+
+#For multiple instances you just add lines like this:
+#  2:
+#    instance_name: "oci-node02"
+#    instance_ip: "10.0.1.102"
+#    public_ip: false
+#  3:
+#    instance_name: "oci-node03"
+#    instance_ip: "10.0.1.103"
+#    public_ip: false
 
 # Tenancy specific configuration
 # *Note* - Override the following variables based on your tenancy

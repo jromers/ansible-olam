@@ -1,15 +1,15 @@
 
 # Your Management Agent install key to use to register the instance
-mgmt_agent_install_key_name: JMR-key
+mgmt_agent_install_key_name:  <key>
 
 # Your Registration profile to use (in /etc/osmh-profile) to register the instance
-reg_profile: 
+reg_profile: <profile-name>
 
 # Your local OSMH Management Station
-gateway_server_host: osmh-bnl
+gateway_server_host: <hostname>
 
 # Your local OSMH Management Station listening Port
-gateway_server_port: 5000
+gateway_server_port: <port>
 
 # Your compartment ocid for the Management Agent
 compartment_ocid: "{{ lookup('env', 'OCI_COMPARTMENT_OCID') }}"

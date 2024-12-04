@@ -1,70 +1,32 @@
 ---
 
-- name: Verify if OSMH and Java already exist on the instance
-  hosts: all 
-  become: yes
-  become_method: sudo
+- name: Check for OCI management agent, management agent install key and registration profile
+  hosts: localhost 
 
-  tasks:
-    - name: Collect facts about system services
-      service_facts:
-
-    - name: Check if the mgmt_agent service is already installed
-      fail:
-        msg: "mgmt_agent is already installed"
-      when: "'mgmt_agent.service' in services"
-          
-    - name: check Java executable is present on remote host
-      command: 
-        "which java"
-      register: java_result
-      tags: check-java-exists
-    - debug: 
-        msg="{{java_result.stdout_lines}}"
-        verbosity=1
-
-    - name: Checking Java version
-      shell: "java -version 2>&1 | awk -F '\"' '/version/ {print $2}' | head -c3"
-      register: java_version
-    - debug: 
-        msg="{{java_version.stdout_lines[0]}}"
-        verbosity=1
-
-    - name: Check if Java Version is greater than 1.8
-      fail:
-        msg: "Java version is less than 1.8, Exiting.."
-      when: java_version.stdout_lines[0]|float < 1.8 
-
-# workflows
-- hosts: localhost
-  var_files:
+  vars_files:
     - default_vars.yml
+
   collections:
     - oracle.oci
 
   tasks:
     - name: Check pre-requisites
       fail:
-        msg: "Environment variable {{item}} not set. Please declare an environment variable with an appropriate value for the sample to work."
+        msg: "Environment {{item}} not set. Please set environment variable with your target compartment ID."
       when: item not in ansible_env
       with_items:
-        - "compartment_ocid"
+        - "OCI_COMPARTMENT_OCID"
 
     - name: Create a directory if it does not exist
       ansible.builtin.file:
-        path: "./{{remote_mgmt_agent_scratch_dir}}"
+        path: "./{{osmh_scratch_dir}}"
         state: directory
         mode: '0755'
 
-    - name: Create management_agent_install_key
+    - name: Get the management_agent_install_key
       oci_management_agent_install_key:
-        # required
         compartment_id: "{{compartment_ocid}}"
         display_name:  "{{mgmt_agent_install_key_name}}"
-        # optional
-        #allowed_key_install_count: 56
-        #time_expires: time_expires_example
-        is_unlimited: true
       register: key_result
     - debug: 
         msg="{{key_result.management_agent_install_key}}"
@@ -72,22 +34,30 @@
         management_agent_install_key: "{{key_result.management_agent_install_key.key}}"
 
     - name: Creating management agent input.rsp file
-      copy:
-        content: "######################################################################## \n
-        # Please refer the following Management Agent Installation Guide for more details. \n
-        # \n
-        # https://docs.cloud.oracle.com/iaas/management-agents/index.html  \n
-        #\n
-        # Since this file has sensitive information, please make sure that after \n
-        # executing setup.sh you either delete this file or store it in a secure \n
-        # location. \n
-        # \n
-        ######################################################################## \n
-        ManagementAgentInstallKey = {{management_agent_install_key}} \n
-        Service.plugin.osmh.download = true \n
-        GatewayServerHost = {{gateway_server_host}} \n
-        GatewayServerPort = {{gateway_server_port}} \n"
-        dest: "./{{remote_mgmt_agent_scratch_dir}}/input.rsp"
+      ansible.builtin.copy:
+        dest: "./{{osmh_scratch_dir}}/input.rsp"
+        content: |
+          ManagementAgentInstallKey = {{management_agent_install_key}}
+          Service.plugin.osmh.download = true
+          GatewayServerHost = {{gateway_server_host}}
+          GatewayServerPort = {{gateway_server_port}}
+
+    - name: Get the registration profile id for /etc/osmh-profile
+      oci_os_management_hub_profile_facts:
+        compartment_id: "{{compartment_ocid}}"
+        display_name: "{{ reg_profile }}"
+      register: profile_result
+    - debug:
+        msg="{{profile_result.profiles}}"
+    - set_fact:
+        profile_key: "{{profile_result.profiles[0].id}}"
+
+    - name: Creating OSMH instance osmh-profile file
+      ansible.builtin.copy:
+        dest: "./{{osmh_scratch_dir}}/osmh-profile"
+        content: |
+          # {{ reg_profile }}
+          {{ profile_key }}
 
     - name: List management agent images
       oci_management_agent_image_facts:
@@ -113,57 +83,114 @@
         namespace_name: "{{namespace}}"
         bucket_name: "{{bucket_name}}"
         object_name: "{{object_name}}"
-        dest: "./{{remote_mgmt_agent_scratch_dir}}/oracle.mgmt_agent.rpm"
+        dest: "./{{osmh_scratch_dir}}/oracle.mgmt_agent.rpm"
       tags: download_agent
  
-- hosts: target_hosts 
-  vars:
-    # common vars
-  tasks:  
+
+- name: Install configuration files, packages and register instance
+  hosts: all 
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+
+  vars_files:
+    - default_vars.yml
+
+  collections:
+    - oracle.oci
+
+  tasks:
+
+    - name: Collect facts about system services
+      service_facts:
+
+    - name: Check if the mgmt_agent service is already installed
+      fail:
+        msg: "mgmt_agent is already installed"
+      when: 
+      - "'mgmt_agent.service' in services"
+ 
     - name: Transfer all mgmt agent files over to the hosts
-      become: yes
-      become_user: root
-      copy:
-        src: "./{{remote_mgmt_agent_scratch_dir}}"
-        dest: "{{remote_mgmt_agent_scratch_parent}}"
+      ansible.builtin.copy:
+        src: "./{{osmh_scratch_dir}}"
+        dest: "{{osmh_scratch_parent}}"
         owner: root
         group: root
         mode: '0644'
+ 
+    - name: Install required packages, JDK8 (minimum 1.8u281 or a later 1.8 version)
+      ansible.builtin.package: 
+        name: java-1.8.0-openjdk 
+        state: latest
 
-#    - name: Install the mgmt agent rpm
-#      become: yes
-#      become_user: root
-#      shell: 
-#        "rpm -ivh {{remote_mgmt_agent_scratch_path}}/oracle.mgmt_agent.rpm"
-#      tags: install-agent
-#
-#    - name: Setting up mgmt agent service
-#      become: yes
-#      become_user: root
-#      shell: 
-#        "/opt/oracle/mgmt_agent/agent_inst/bin/setup.sh opts={{remote_mgmt_agent_scratch_path}}/input.rsp"
-#      tags: setup-agent
-#    
-#    - name: collect facts about system services
-#      service_facts:
-#
-#    - name: Check if the mgmt_agent service is in running state
-#      fail:
-#        msg: "mgmt_agent is not in running state"
-#      when: "'mgmt_agent.service' not in services or ansible_facts.services['mgmt_agent.service'].state != 'running'"
-#    
-#    - name: Cleanup management agent scratch
-#      become: yes
-#      become_user: root
-#      file:
-#        path: "{{remote_mgmt_agent_scratch_path}}"
-#        state: absent
+    - name: Install chkconfig on OL9 only
+      ansible.builtin.dnf: 
+        name: chkconfig
+        state: latest
+      when: 
+      - ansible_facts['distribution_major_version'] == "9"
+
+    - name: Copy registration profile to /etc/osmh-profile
+      ansible.builtin.copy:
+        src: "{{osmh_scratch_dir}}/osmh-profile"
+        dest: /etc/osmh-profile
+        mode: '0644'
+
+    - name: Configure the Management Agent plugin to run as root
+      ansible.builtin.copy:
+        content: |
+          ## Allows Management Agent to change ownership of deployed External Plugin
+          mgmt_agent ALL=(ALL) NOPASSWD:/opt/oracle/mgmt_agent/agent_inst/bin/chown_recursive_ep.sh
+          ## Allows Management Agent to run External Plugin under root user
+          mgmt_agent ALL=(root) NOPASSWD:SETENV: /opt/oracle/mgmt_agent/plugins/osmh/*/osmh
+        dest: /etc/sudoers.d/mgmt_agent
+        owner: root
+        group: root
+        mode: '0440'
+
+    - name: Install the mgmt agent rpm
+      shell: 
+        "JAVA_HOME=/usr/lib/jvm/jre-1.8.0-openjdk dnf install -y {{osmh_scratch_path}}/oracle.mgmt_agent.rpm"
+      tags: install-agent
+      when: 
+      - ansible_facts['distribution_major_version'] == "8" or ansible_facts['distribution_major_version'] == "9"
+
+    - name: Install the mgmt agent rpm
+      shell: 
+        "JAVA_HOME=/usr/lib/jvm/jre-1.8.0-openjdk yum install -y {{osmh_scratch_path}}/oracle.mgmt_agent.rpm"
+      tags: install-agent
+      when: 
+      - ansible_facts['distribution_major_version'] == "7"
+
+    - name: Setting up mgmt agent service
+      become: yes
+      become_user: root
+      shell: 
+        "/opt/oracle/mgmt_agent/agent_inst/bin/setup.sh opts={{osmh_scratch_path}}/input.rsp"
+      tags: setup-agent
+    
+    - name: collect facts about system services
+      service_facts:
+
+    - name: Check if the mgmt_agent service is in running state
+      fail:
+        msg: "mgmt_agent is not in running state"
+      when: "'mgmt_agent.service' not in services or ansible_facts.services['mgmt_agent.service'].state != 'running'"
+    
+    - name: Cleanup management agent scratch
+      become: yes
+      become_user: root
+      file:
+        path: "{{osmh_scratch_path}}"
+        state: absent
 
 - hosts: localhost
-  collections:
-    - oracle.oci
+
+  vars_files:
+    - default_vars.yml
+
   tasks:
     - name: Cleanup management agent scratch
       file:
-        path: "./{{remote_mgmt_agent_scratch_dir}}"
+        path: "./{{osmh_scratch_dir}}"
         state: absent
