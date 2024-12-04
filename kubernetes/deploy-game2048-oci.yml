@@ -1,0 +1,33 @@
+#
+# Oracle Linux Automation Manager
+#
+# Copyright (c) 2022 Oracle and/or its affiliates.
+# Licensed under the Universal Permissive License v 1.0 as shown at
+# https://oss.oracle.com/licenses/upl.
+#
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+#
+# Description: Ansible playbook to create
+# and install the OCNE MetalLB modules.
+#
+# yamllint disable
+
+---
+
+- name: Deploy the K8s 2048 Game application
+  hosts: ocne_op
+  gather_facts: false
+
+  tasks:
+
+  - name: Copy the Deployment file
+    copy:
+      src: "{{ playbook_dir }}/kubernetes/game2048-oci-lb.yaml"
+      dest: "/tmp/game2048-oci-lb.yaml"
+      mode: 0644
+
+  - name: Deploy the 2048 Game application into Kubernetes
+    command: kubectl apply -f /tmp/game2048-oci-lb.yaml
+    environment:
+      KUBECONFIG: "kubeconfig.ocne_env.{{ ocne_k8s }}"
+

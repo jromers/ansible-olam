@@ -1,0 +1,30 @@
+---
+- name: Run an OS update for all servers
+  hosts: all
+ 
+  tasks:
+    - name: Upgrade all packages with dnf (Enterprise Linux 8)
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_facts['distribution_major_version'] == '8'
+
+    - name: Upgrade all packages with yum (Enterprise Linux 7)
+      ansible.builtin.yum:
+        name: "*"
+        state: latest
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_facts['distribution_major_version'] == '7'
+
+    - name: Upgrade all packages with apt (Ubuntu)
+      apt:
+        name: '*'
+        state: latest
+        update_cache: yes
+      when:
+        - ansible_os_family == "Debian"
+        - ansible_distribution == "Ubuntu"
+

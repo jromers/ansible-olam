@@ -1,0 +1,26 @@
+# ansible_python_interpreter = /usr/bin/python3
+
+# Your Management Agent install key to use to register the instance
+mgmt_agent_install_key_name = JMR-key
+
+# Your Registration profile to use (in /etc/osmh-profile) to register the instance
+reg_profile = ol8-clients
+
+# Your local OSMH Management Station
+gateway_server_host = osmh-bnl
+
+# Your local OSMH Management Station listening Port
+gateway_server_port = 5000
+
+# Your compartment ocid for the Management Agent
+compartment_ocid = "{{ lookup('env', 'COMPARTMENT_OCID') }}"
+
+# parent directory under hosts where the required files will be copied from localhost
+remote_mgmt_agent_scratch_parent = /tmp
+
+# directory where the rpm and input.rsp is downloaded
+remote_mgmt_agent_scratch_dir = mgmt_agent_scratch
+
+# host path for the resources
+remote_mgmt_agent_scratch_path = {{ remote_mgmt_agent_scratch_parent + '/' + remote_mgmt_agent_scratch_dir }}
+

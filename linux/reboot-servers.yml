@@ -1,0 +1,9 @@
+---
+- name: Reboot Linux server
+  hosts: all
+ 
+  tasks:
+
+    - name: Reboot server 
+      ansible.builtin.reboot:
+        msg: "Rebooting machine in 5 seconds"

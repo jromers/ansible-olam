@@ -1,0 +1,7 @@
+---
+collections:
+  - name: ovirt.ovirt
+  - name: community.general
+  - name: kubernetes.core
+  - name: ansible.posix
+  - name: oracle.oci
