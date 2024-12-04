@@ -1,0 +1,54 @@
+---
+- hosts: olvm
+  become: yes
+  become_method: sudo
+  gather_facts: no
+
+  vars_files:
+    - password.yml
+
+  tasks:
+    - name: Login to OLVM manager
+      ovirt.ovirt.ovirt_auth:
+        hostname: "{{ olvm_fqdn }}"
+        username: "{{ olvm_user }}"
+        password: "{{ olvm_password }}"
+        ca_file: "{{ olvm_cafile | default(omit) }}"
+        insecure: "{{ olvm_insecure | default(true) }}"
+      tags:
+        - always
+
+    - name: Create Virtual Machine
+      ovirt.ovirt.ovirt_vm:
+        auth: "{{ ovirt_auth }}"
+        state: running
+        name: "{{ item }}"
+        template: "{{ olvm_template }}"
+        cluster: "{{ olvm_cluster | default('Default') }}"
+        high_availability: true
+        cloud_init:
+          host_name: "{{ hostvars[item]['vm_name'] }}"
+          user_name: cloud-user
+          authorized_ssh_keys: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCn3b0hJHoPF+v4NxlCGmTWqp5dIy8HqdkcarU4T4gQvBhleAgtNBJWWeVYNFNVGyQLJV9kLFNx6TU5ccRO/VNlYJfM8oYdjLzaPMN6XmFwdSIzEv2Lo5u4oupqd+aUPvCdqbwyvRe77uv3Wpcu5YUxNLwk7py0BkgdPjPjDjW3eEV6cglrjxAzQHHRiArUwVOHF+Ojx1BeysMjap2P+lEDV7LZLxbCUL66rw4ctb5CsbrMom9IS/CwZVZrmuZwO3JIljpSul6EaxDP7rDa74OgHeo5zMxPALqpNPLP33KZWr6aQedWPYYh2cCdsIZFRoaEzPXE+oPrNj8kVnTw+sji7mLy3fic6MBkHHdidmLpQ4UB3qK6rnLWzAMv0O0C7lyx31ZpzSxjyafWSAMjCQmMzv3NdbJOuqJZS7vg+KAgNYZtWy4bhF+zPUCNHX1VizeMkowpio396RmvpaPiKIzxcpNFTNhreRJJKdmbNqCvdBdAHDBgPWJ/rLS5yYrbhj8= oci-olam"
+          dns_servers: "192.168.178.3"
+          dns_search: "fl390.local"
+          nic_boot_protocol: static
+          nic_ip_address: "{{ hostvars[item]['vm_ip'] }}"
+          nic_netmask: 255.255.255.0
+          nic_gateway: 192.168.178.1
+          nic_name: eth0
+          timezone: "{{ vm_timezone }}"
+          custom_script: |
+            write_files:
+             - content: |
+                 search fl390.local
+                 nameserver 192.168.178.3
+               path: /etc/resolv.conf
+               permissions: '0644'
+        wait: true
+      loop: "{{ groups['vms'] }}"
+
+    - name: Cleanup OLVM auth token
+      ovirt.ovirt.ovirt_auth:
+        ovirt_auth: "{{ ovirt_auth }}"
+        state: absent
