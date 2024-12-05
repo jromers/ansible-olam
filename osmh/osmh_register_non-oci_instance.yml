@@ -86,7 +86,7 @@
  
 
 - name: Install configuration files, packages and register instance
-  hosts: all 
+  hosts: instances 
   become: yes
   become_method: sudo
   gather_facts: yes
