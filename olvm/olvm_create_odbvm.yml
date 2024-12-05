@@ -46,7 +46,7 @@
                path: /etc/resolv.conf
                permissions: '0644'
         wait: true
-      loop: "{{ groups['vms'] }}"
+      loop: "{{ groups['instances'] }}"
 
     - name: Cleanup OLVM auth token
       ovirt.ovirt.ovirt_auth:

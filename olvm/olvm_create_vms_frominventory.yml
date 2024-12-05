@@ -26,8 +26,8 @@
         name: "{{ item }}"
         template: "{{ olvm_template }}"
         cluster: "{{ olvm_cluster | default('Default') }}"
-        memory: "{{ vm_ram | default('1024MiB') }}"
-        cpu_sockets: "{{ vm_cpu | default('1')  }}"
+        memory: "{{ hostvars[item]['vm_ram'] | default('1024MiB') }}"
+        cpu_sockets: "{{ hostvars[item]['vm_cpu'] | default('1')  }}"
         high_availability: true
         state: running
         wait: yes
@@ -49,7 +49,7 @@
               - hostnamectl set-hostname {{ hostvars[item]['vm_name'] + '.' + vm_dns_domain }}
               - yum -y remove cloud-init
         wait: true
-      loop: "{{ groups['vms'] }}"
+      loop: "{{ groups['instances'] }}"
 
     - name: Cleanup OLVM auth token
       ovirt.ovirt.ovirt_auth:
