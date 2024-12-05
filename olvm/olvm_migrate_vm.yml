@@ -6,7 +6,7 @@
 #   --extra-vars "vm_name=XXX"
 #   --extra-vars "dst_kvmhost=YYY"
 
-- hosts: all
+- hosts: olvm
   become: yes
   become_method: sudo
   gather_facts: no

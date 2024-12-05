@@ -5,7 +5,7 @@
 # Define following variables as extra-vars, for example:
 #   --extra-vars "vm_name=oltest"
 
-- hosts: all
+- hosts: olvm
   become: yes
   
   vars_files:
