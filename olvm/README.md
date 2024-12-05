@@ -9,13 +9,19 @@ The playbooks uses modules from the [ovirt.ovirt Ansible collection](https://doc
 
 ## Ansible CLI
 
-First step is the configuration of the playbook variables which are mostly configured in ``default_vars.yml`` file. Some of the variables may be used in the command line when not configured in the default variables file. Variables are required to configure your infrastructure settings for the OLVM server, VM configuration and cloud-init. See below table for explanation of the variables. 
+First step is the configuration of the playbook variables which are mostly configured in ``default_vars.yml`` file. Variables may be used in the command line when not configured in the default variables file. Variables are required to configure your infrastructure settings for the OLVM server, VM configuration and cloud-init. See below table for explanation of the variables. 
 
 The playbooks can be used like this:
 
-    $ git clone https://github.com/jromers/olvm-ansible.git
-    $ cd olam-ansible
-    $ ansible-galaxy collection install -r collections/requirements.yml
+    $ git clone https://github.com/jromers/ansible-olam.git
+    $ cd ansible-olam/olvm
+    $ cat << EOF > requirements.yml 
+    ---
+    collections:
+      - name: ovirt.ovirt
+      - name: community.general
+    EOF
+    $ ansible-galaxy collection install requirements.yml
     $ vi default_vars.yml
     $ export "OVIRT_URL=https://OLVM-FQDN/ovirt-engine/api"
     $ export "OVIRT_USERNAME=admin@internal"
@@ -49,7 +55,7 @@ Note 2: as it includes clear-text password, for better security you may want to 
 In Oracle Linux Automation Manager you can directly import the playbook repository from Github as Project. The top-level directory of the repository contains the requirements file to download the ovir.ovirt ansible collection.
 
 #### Inventory:
-Create an inventory and add one host with the details of your OLVM server, this is the target host were you run the playbook. Make sure tou have a Machine credential setup for this host so that ansible can SSH to it (run the ping Module for this host).
+Create an inventory and add one host with the details of your OLVM server, this is the target host were you run the playbook. Make sure you have a Machine credential setup for this host so that ansible can SSH to it (run the ping Module for this host).
 
 #### Credentials:
 Besides the standard SSH credential to access the target host, an additional credential is required to use the ovirt modules in the playbooks. It's based on credential type ``Red Hat Virtualization`` and you need to fill in the OLVM FQDN, username, password and CA File. For example:

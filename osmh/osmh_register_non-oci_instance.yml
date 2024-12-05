@@ -146,14 +146,14 @@
         group: root
         mode: '0440'
 
-    - name: Install the mgmt agent rpm
+    - name: Install the mgmt agent rpm (Oracle Linux 8 or Oracle Linux 9)
       shell: 
         "JAVA_HOME=/usr/lib/jvm/jre-1.8.0-openjdk dnf install -y {{osmh_scratch_path}}/oracle.mgmt_agent.rpm"
       tags: install-agent
       when: 
       - ansible_facts['distribution_major_version'] == "8" or ansible_facts['distribution_major_version'] == "9"
 
-    - name: Install the mgmt agent rpm
+    - name: Install the mgmt agent rpm (Oracle Linux 7)
       shell: 
         "JAVA_HOME=/usr/lib/jvm/jre-1.8.0-openjdk yum install -y {{osmh_scratch_path}}/oracle.mgmt_agent.rpm"
       tags: install-agent
