@@ -1,12 +1,12 @@
-# OSMH - Ansible Playbook for registering OSMH non-OCI Oracle Linux instances
+# OSMH - Ansible Playbook to register non-OCI Oracle Linux OSMH instances
 
-This playbook registers an Oracle Linux server with the OSMH management service. The playbooks support Oracle Linux servers running in on-premise locations as well as in non-OCI clouds such as AWS and Azure. To register Oracle Linux instances in Oracle's OCI cloud a [different procedure](https://docs.oracle.com/en-us/iaas/osmh/doc/register-oci-instance.htm#register-oci-instance) is required.
+This playbook registers an Oracle Linux server with the OS Management Hub (OSMH) management service in Oracle OCI cloud. The playbooks support Oracle Linux servers running in on-premise locations as well as in non-OCI clouds such as AWS and Azure. To register Oracle Linux instances running in Oracle's OCI cloud a [different procedure](https://docs.oracle.com/en-us/iaas/osmh/doc/register-oci-instance.htm#register-oci-instance) is required.
 
 The playbooks uses modules from the [oracle.oci Ansible collection](https://docs.oracle.com/en-us/iaas/tools/oci-ansible-collection/5.3.0/index.html) which should be downloaded before using the playbooks. Read the collection documentation page for additional explanation or for extending the functionality of the playbooks.
 
-# How to use the playbooks
+## How to use the playbooks
 
-## Ansible CLI
+### Ansible CLI
 
 First step is the configuration of the playbook variables which are mostly configured in ``default_vars.yml`` file. Variables may be used in the command line when not configured in the default variables file. Variables are required to configure your infrastructure settings such as your local Management Station. See below table for explanation of the variables. 
 
@@ -16,18 +16,13 @@ The playbooks can be used like this:
 
     $ git clone https://github.com/jromers/ansible-olam.git
     $ cd ansible-olam/osmh
-    $ cat << EOF > requirements.yml 
-    ---
-    collections:
-      - name: oracle.oci
-      - name: community.general
-    EOF
+    $ ansible-galaxy collection install -f oracle.oci
+    $ ansible-galaxy collection install -f community.general
     $ cat << EOF > hosts.ini
     # Define group "instances", for instances to register. For example:
     [instances]
     192.168.1.11
     EOF
-    $ ansible-galaxy collection install requirements.yml
     $ vi default_vars.yml
 
     $ ansible-playbook -i hosts.ini -u opc --key-file ~/.ssh/id_rsa \
@@ -38,7 +33,7 @@ The playbooks can be used like this:
           -e "reg_profile=ol9-clients" osmh_register_non-oci_instance.yml
 
 
-## Oracle Linux Automation Manager
+### Oracle Linux Automation Manager
 
 #### Project:
 In Oracle Linux Automation Manager you can directly import the playbook repository from Github as Project. The top-level directory of the repository contains the requirements file to download the oracle.oci ansible collection.
@@ -60,7 +55,7 @@ Create a new job template and provide the following information:
     Credentials:		Select Machine (SSH) credential and the OCI credentials
     Variables:		Enter the variables as used in the example default_vars.yml file
 
-# Variables used in the playbooks 
+## Variables used in the playbooks 
 
 | Variable | Example value | Description |
 | -------- | ------------- | ----------- |

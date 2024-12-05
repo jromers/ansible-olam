@@ -5,9 +5,9 @@ A collection of Ansible playbooks to use with Oracle Linux Virtualization Manage
 
 The playbooks uses modules from the [ovirt.ovirt Ansible collection](https://docs.ansible.com/ansible/latest/collections/ovirt/ovirt/index.html) which should be downloaded before using the playbooks. Read the collection documentation page for additional explanation or for extending the functionality of the playbooks.
 
-# How to use the playbooks
+## How to use the playbooks
 
-## Ansible CLI
+### Ansible CLI
 
 First step is the configuration of the playbook variables which are mostly configured in ``default_vars.yml`` file. Variables may be used in the command line when not configured in the default variables file. Variables are required to configure your infrastructure settings for the OLVM server, VM configuration and cloud-init. See below table for explanation of the variables. 
 
@@ -15,13 +15,8 @@ The playbooks can be used like this:
 
     $ git clone https://github.com/jromers/ansible-olam.git
     $ cd ansible-olam/olvm
-    $ cat << EOF > requirements.yml 
-    ---
-    collections:
-      - name: ovirt.ovirt
-      - name: community.general
-    EOF
-    $ ansible-galaxy collection install requirements.yml
+    $ ansible-galaxy collection install -f ovirt.ovirt
+    $ ansible-galaxy collection install -f community.general
     $ vi default_vars.yml
     $ export "OVIRT_URL=https://OLVM-FQDN/ovirt-engine/api"
     $ export "OVIRT_USERNAME=admin@internal"
@@ -49,7 +44,7 @@ Note 2: as it includes clear-text password, for better security you may want to 
         -e "vm_name=oltest" -e "vm_ip_address=192.168.1.100" \
         --ask-vault-pass olvm_create_single_vm.yml
 
-## Oracle Linux Automation Manager
+### Oracle Linux Automation Manager
 
 #### Project:
 In Oracle Linux Automation Manager you can directly import the playbook repository from Github as Project. The top-level directory of the repository contains the requirements file to download the ovir.ovirt ansible collection.
@@ -73,7 +68,7 @@ Create a new job template and provide the following information:
     Credentials:		Select Machine (SSH) credential and the Virtualization credentials
     Variables:		Enter the variables as used in the example default_vars.yml file
 
-## Secure API connection
+### Secure API connection
 
 By default the API connection to the OLVM server is insecure, if you want to use a secure API connection then you need to define variable ``olvm_insecure`` and make sure the CA file is available (default location is ``/etc/pki/ovirt-engine/ca.pem``). You may use ``olvm_cafile`` to specify alternative location. 
 
@@ -84,7 +79,7 @@ The CA file can be downloaded from the main OLVM web portal or directly from the
 
     $ scp root@OLVM-FQDN:/etc/pki/ovirt-engine/ca.pem /home/opc/ca.pem
 
-# Variables used in the playbooks 
+## Variables used in the playbooks 
 
 | Variable | Example value | Description |
 | -------- | ------------- | ----------- |
@@ -115,7 +110,7 @@ The CA file can be downloaded from the main OLVM web portal or directly from the
 | olvm_cafile | /home/opc/ca.pem | Location of CA file in case you wish alternative location
 
 
-# Deploying Oracle Linux OLVM VM templates
+## Deploying Oracle Linux OLVM VM templates
 
 Two playbooks are provided to deploy new virtual machines in Oracle Linux Virtualization Manager based on a pre-configured template. This may be your own template or templates downloaded from Oracle's website which can be [imported directly in Oracle Linux Virtualization Manager](https://docs.oracle.com/en/virtualization/oracle-linux-virtualization-manager/admin/admin-admin-tasks.html#templates-create):
 
