@@ -3,7 +3,7 @@
 # Configure default_vars_multiple_vms.yml to define VMs to create
 #
 
-- hosts: all
+- hosts: olvm
   become: yes
   become_method: sudo
   gather_facts: yes

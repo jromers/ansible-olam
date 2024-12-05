@@ -1,5 +1,5 @@
 ---
-- hosts: olvmmgr
+- hosts: olvm
   become: yes
   become_method: sudo
   gather_facts: yes
