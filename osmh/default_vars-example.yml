@@ -12,7 +12,7 @@ gateway_server_host: <hostname>
 gateway_server_port: <port>
 
 # Your compartment ocid for the Management Agent
-compartment_ocid: "{{ lookup('env', 'OCI_COMPARTMENT_OCID') }}"
+compartment_ocid: <ocid.........nr>
 
 # parent directory under hosts where the required files will be copied from localhost
 osmh_scratch_parent: /tmp

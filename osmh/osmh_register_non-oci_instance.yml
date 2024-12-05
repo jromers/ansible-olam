@@ -10,12 +10,10 @@
     - oracle.oci
 
   tasks:
-    - name: Check pre-requisites
-      fail:
-        msg: "Environment {{item}} not set. Please set environment variable with your target compartment ID."
-      when: item not in ansible_env
-      with_items:
-        - "OCI_COMPARTMENT_OCID"
+    - name: Check if compartmentID is defined
+      ansible.builtin.fail:
+        msg: "'compartment_ocid' must be defined with the proper OCI compartmentID"
+      when: compartment_ocid is undefined
 
     - name: Create a directory if it does not exist
       ansible.builtin.file:
