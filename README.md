@@ -9,4 +9,6 @@ The playbooks were used in PoCs to show integration of several components in the
 * [OCI](https://github.com/jromers/ansible-olam/tree/main/oci): example playbooks to create instances in an Oracle cloud OCI compartment
 * [Linux](https://github.com/jromers/ansible-olam/tree/main/linux) and [Kubernetes](https://github.com/jromers/ansible-olam/tree/main/kubernetes) are simple playbooks to be used as side activities
 
+Intended usage of the playbooks are for PoC and demos and they just do what was asked to do. For production you need to make the playbooks more robust by adding type checking end error-handling.
+
 The playbooks are "as is", a private initiative and are not supported by me or any other person or organisation.
