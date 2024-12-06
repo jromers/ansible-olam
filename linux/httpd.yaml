@@ -26,5 +26,6 @@
   - name: Write default index.html file
     ansible.builtin.copy:
       dest: "/var/www/html/index.html"
+      mode: '0644'
       content: |
         <h1>Hello World!</H1>
