@@ -1,0 +1,27 @@
+---
+
+- name: Create and Deploy an Istio Module
+  hosts: ocne_op
+  gather_facts: false
+
+  tasks:
+
+  - name: Create a Istio Module (includes Prometheus and Grafana)
+    command: olcnectl module create \
+           --environment-name {{ ocne_environment }} \
+           --module istio \
+           --name {{ ocne_istio }} \
+           --istio-helm-module {{ ocne_helm }}
+
+  - name: Validate the Istio Module
+    command: olcnectl module validate \
+            --environment-name {{ ocne_environment }} \
+            --name {{ ocne_istio }} 
+
+  - name: Deploy the Istio Module
+    command: olcnectl module install \
+        --environment-name {{ ocne_environment }} \
+        --name {{ ocne_istio }}
+    register: deploy_istio
+    until: deploy_istio is not failed
+    retries: 3

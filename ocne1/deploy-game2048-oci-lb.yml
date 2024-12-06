@@ -1,0 +1,19 @@
+---
+
+- name: Create and Deploy the 2048 Game application
+  hosts: ocne_op
+  gather_facts: false
+
+  tasks:
+
+  - name: Copy the Deployment file
+    copy:
+      src: "{{ playbook_dir }}/files/game2048-oci-lb.yaml"
+      dest: "/tmp/game2048-oci-lb.yaml"
+      mode: 0644
+
+  - name: Deploy the 2048 Game application into Kubernetes
+    command: kubectl apply -f /tmp/game2048-oci-lb.yaml
+    environment:
+      KUBECONFIG: "kubeconfig.ocne_env.{{ ocne_k8s }}"
+

@@ -1,0 +1,103 @@
+# Description: Ansible playbook to create
+# and install the OCNE OCI-CCM  module.
+#
+# If you want to encrypt this file, please execute following command:
+#
+#  $ cp deploy-mod-ociccm-example.yml deploy-mod-ociccm.yml
+#  $ <edit your settings in var-section>
+#  $ ansible-vault encrypt deploy-mod-ociccm.yml
+#
+
+---
+
+- name: Setting the OCI-CM Health Check Network Ports
+  hosts: ocne_kube_worker 
+  become: yes
+  gather_facts: false
+
+  tasks:
+
+  - name: Open Port 10256 TCP
+    firewalld:
+      port: 10256/tcp
+      permanent: yes
+      state: enabled
+
+  - name: Restart firewalld
+    service:
+      name: firewalld
+      state: restarted
+      enabled: yes
+
+
+- name: Distribute OCI API key to control planes
+  hosts: ocne_kube_control
+  gather_facts: true
+
+  tasks:
+
+  - name: Creates directory to store OCI API key
+    file:
+      path: "{{ ansible_env.HOME }}/.oci"
+      state: directory
+
+  - name: Copy the Oracle Cloud Infrastructure API signing key
+    copy:
+      src: "{{ playbook_dir }}/files/oci_api_key.pem"
+      dest: "{{ ansible_env.HOME }}/.oci/oci_api_key.pem"
+
+
+- name: Create and Deploy an OCI-CCM Module
+  hosts: ocne_op
+  gather_facts: false
+
+
+#
+# insert you OCI keys here and create ansible-vault
+# - better: use Oracle OCI credential type in OLAM
+#
+  vars:
+    oci_region: uk-london-1
+    oci_tenancy: ocid1.tenancy.oc1..aa..........sa
+    oci_compartment: ocid1.compartment.oc1..aa..........qh
+    oci_user: ocid1.user.oc1..aa..........sg
+    oci_fingerprint: 4e:69:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:cc
+    oci_private_key: /tmp/oci_api_key.pem
+    oci_vcn: ocid1.vcn.oc1.uk-london-1.am..........ag
+    oci_lb_subnet1: ocid1.subnet.oc1.uk-london-1.aa..........hf
+
+  tasks:
+
+  - name: Copy the Oracle Cloud Infrastructure API signing key
+    copy:
+      src: "{{ playbook_dir }}/files/oci_api_key.pem"
+      dest: "{{oci_private_key}}"
+      mode: 0600
+
+  - name: Create an Oracle OCI-CCM Module
+    command: olcnectl module create \
+        --environment-name {{ ocne_environment }} \
+        --module oci-ccm \
+        --name {{ ocne_oci }} \
+        --oci-ccm-helm-module {{ ocne_helm }} \
+        --oci-region {{ oci_region }} \
+        --oci-tenancy {{ oci_tenancy }} \
+        --oci-user {{ oci_user }} \
+        --oci-fingerprint {{ oci_fingerprint }} \
+        --oci-vcn {{ oci_vcn }} \
+        --oci-lb-subnet1 {{ oci_lb_subnet1 }} \
+        --oci-compartment {{ oci_compartment }} \
+        --oci-private-key {{ oci_private_key }} 
+
+  - name: Validate the Oracle OCI-CCM Module
+    command: olcnectl module validate \
+        --environment-name {{ ocne_environment }} \
+        --name {{ ocne_oci }}
+
+  - name: Deploy the Oracle OCI-CCM Module
+    command: olcnectl module install \
+        --environment-name {{ ocne_environment }} \
+        --name {{ ocne_oci }}
+    register: deploy_oci_ccm
+    until: deploy_oci_ccm is not failed
+    retries: 3

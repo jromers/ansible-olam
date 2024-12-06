@@ -42,7 +42,7 @@ In Oracle Linux Automation Manager you can directly import the playbook reposito
 Create an inventory and add the Hosts, also create the Group "instances" and add the hostnames to the group. Make sure you have a Machine credential setup for the hosts so that ansible can SSH to it (run the ping Module for the hosts to test the connection).
 
 #### Credentials:
-Besides the standard SSH credential to access the target host, you need to add the credentials for OCI. In the credentials section there is a credential typ "Oracle Cloud Infrastructure" where you need to enter your ``User OCID``, ``Fingerprint``, ``Tenant OCID``, ``Region`` and ``Private User Key``. This is the same information that is stored in the ``~/.oci/config`` file mentioned above.
+Besides the standard SSH credential to access the target host, you need to add the credentials for OCI. In the credentials section there is a credential type "Oracle Cloud Infrastructure" where you need to enter your ``User OCID``, ``Fingerprint``, ``Tenant OCID``, ``Region`` and ``Private User Key``. This is the same information that is stored in the ``~/.oci/config`` file mentioned above.
 
 See [this Tutorial with an example](https://docs.oracle.com/en/learn/olam-oci-collection/#create-oci-credentials) on how to create the Oracle OCI credential in Oracle Linux Automation Manager.
 

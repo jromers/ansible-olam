@@ -1,0 +1,11 @@
+---
+collections:
+  - name: https://github.com/ansible-collections/kubernetes.core.git
+    type: git
+    version: main
+  - name: https://github.com/ansible-collections/ansible.posix.git
+    type: git
+    version: main
+  - name: https://github.com/ansible-collections/community.crypto.git
+    type: git
+    version: main

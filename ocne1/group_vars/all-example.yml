@@ -1,0 +1,54 @@
+# Description:
+# Variables used in the Playbooks
+#
+
+# Version to install
+ocne_version: ocne18
+
+# Configure OCNE configuration file download url and name
+env_file_url: http://example.com/ocne-configfile.yml
+env_file: ocne-configfile.yml
+
+# Set use_proxy to 'true' if the environment is behind a proxy, else set to 
+# 'false' !!!
+# Required!!!
+use_proxy: false
+
+# Proxy details. Leave empty if not using proxy.
+my_https_proxy:
+my_http_proxy:
+my_no_proxy:
+
+# Container registry path to get the OCNE component container images 
+# !!!Required!!!
+container_registry: container-registry-ams.oracle.com/olcne
+
+# The virtual IP for an olcne-nginx load balancer, replace with your
+# virtual IP address.
+# !!!Required if multi-master (HA) with nginx!!!
+virtual_ip: 192.168.178.81
+
+# Set name for the OCNE environment !!!
+# !!!Required!!!
+ocne_environment: ocne_env
+
+# Set name of the OCNE Kubernetes module !!!
+# !!!Required!!!
+ocne_k8s: ocne_cluster
+
+# Set name of the OCNE Helm. Required is deploying Istio or OLM Modules. 
+# Leave empty if not creating either of them.
+ocne_helm: myhelm
+
+# Set name of the OCNE Istio module. Leave empty if not creating Istio module.
+ocne_istio: myistio
+
+# Set name of the OCNE OLM module. Leave empty if not creating OLM module.
+ocne_olm: myolm
+
+# Set name of the OCNE OCI-CCM module. Leave empty if not creating CCM module.
+ocne_oci: myoci
+
+# Set name of the OCNE MetalLB module. Leave empty if not creating CCM module.
+ocne_metallb: mymetallb
+

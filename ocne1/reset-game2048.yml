@@ -1,0 +1,17 @@
+---
+
+- name:  Reset Loadbalancer and 2048 Game deployment
+  hosts: ocne_op
+  gather_facts: false
+
+  tasks:
+
+  - name: Delete the 2048 Game service (external Loadbalancer)
+    command: kubectl delete svc game2048-service
+    environment:
+        KUBECONFIG: "kubeconfig.ocne_env.{{ ocne_k8s }}"
+
+  - name: Delete the 2048 Game deployment
+    command: kubectl delete deployments.apps game2048-deployment
+    environment:
+        KUBECONFIG: "kubeconfig.ocne_env.{{ ocne_k8s }}"
