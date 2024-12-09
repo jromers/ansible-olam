@@ -118,7 +118,7 @@
  
     - name: Install required packages, JDK8 (minimum 1.8u281 or a later 1.8 version)
       ansible.builtin.package: 
-        name: java-1.8.0-openjdk 
+        name: java-1.8.0-openjdk-headless
         state: latest
 
     - name: Install chkconfig on OL9 only
