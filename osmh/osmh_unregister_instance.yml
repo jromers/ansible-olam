@@ -1,0 +1,25 @@
+---
+
+- name: Check for OCI management agent, management agent install key and registration profile
+  hosts: localhost 
+
+  vars_files:
+    - default_vars.yml
+
+  collections:
+    - oracle.oci
+
+  tasks:
+    - name: Lookup managed instance id
+      oci_os_management_hub_managed_instance_facts:
+        # optional
+        compartment_id: "{{compartment_ocid}}"
+        display_name: "{{vm_name}}"
+      register: instances_result
+    - set_fact:
+        instance_id: "{{instances_result.managed_instances[0].id}}"
+
+    - name: Delete managed_instance
+      oci_os_management_hub_managed_instance:
+        managed_instance_id: "{{instance_id}}"
+        state: absent
