@@ -29,3 +29,4 @@
       mode: '0644'
       content: |
         <h1>Hello World!</H1>
+        Webserver created at time (UTC): {{ now(utc=true, fmt='%Y-%m-%d %H:%M:%S') }}
