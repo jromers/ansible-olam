@@ -12,9 +12,6 @@ instance_ad: "MrTj:UK-LONDON-1-AD-3"
 # The compartment ID in your Tenenacy where you like to deploy the instances.
 instance_compartment: "ocid1.compartment.oc1..aaaa....<insert your OCID here>....3j6q"
 
-# The subnet ID of the network in your VCN wher you like the instance to connect to the network.
-instance_subnet_id: "ocid1.subnet.oc1.uk-london-1.aaaa....<insert your OCID here>....hmp3q"
-
 # Provide the ssh public key to be inserted in the instance
 ssh_public_key: "ssh-rsa AAAA....<insert your public key here>.....bhj8= my_oci_key"
 
