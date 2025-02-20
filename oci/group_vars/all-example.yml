@@ -1,0 +1,32 @@
+# Generic variables used to build an instance
+#
+
+# Enter freeform tags if you like, define your own key and value.
+my_tags:
+  Tag1: abcd
+  Tag2: efgh
+
+# Enter one of the availability domains in your region, such as below.
+instance_ad: "MrTj:UK-LONDON-1-AD-3"
+
+# The compartment ID in your Tenenacy where you like to deploy the instances.
+instance_compartment: "ocid1.compartment.oc1..aaaa....<insert your OCID here>....3j6q"
+
+# The subnet ID of the network in your VCN wher you like the instance to connect to the network.
+instance_subnet_id: "ocid1.subnet.oc1.uk-london-1.aaaa....<insert your OCID here>....hmp3q"
+
+# Provide the ssh public key to be inserted in the instance
+ssh_public_key: "ssh-rsa AAAA....<insert your public key here>.....bhj8= my_oci_key"
+
+# The Operating System instance template you like to use. For an up-to-date list of the
+# instances see the following URL, select you OS and locate the ocid for your region:
+# https://docs.oracle.com/en-us/iaas/images/index.htm
+# 
+# OL8:
+#instance_image: "ocid1.image.oc1.uk-london-1.aaaaaaaaebhu66xkmserrvecfa4cvxcfwkis7o5obbwlt46gfxuwsne6rjya"
+# OL9:
+instance_image: "ocid1.image.oc1.uk-london-1.aaaaaaaaxb3j26h6gzb7toyt4hlz3sifpxx3idx3d4i5hn4h75apvcy6c7da"
+
+# The compute shape to use for your instance, determines CPU/MEMORY/etc.
+# https://docs.oracle.com/en-us/iaas/Content/Compute/References/computeshapes.htm#vmshapes
+instance_shape: "{{ lookup('env', 'MY_INSTANCE_SHAPE') | default('VM.Standard.E2.2', true) }}"

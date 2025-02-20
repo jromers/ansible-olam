@@ -1,6 +1,12 @@
 # Using Ansibel CLI to create instances in existing OCI VPN.
 
-This was tested on MacOS with the OCI CLE installed, including the $HOME/.oci/config files configured.
+Very simple playbook to install OCI VM instances in an existing VCN and subnet. This was tested on MacOS with the OCI CLE installed, including the $HOME/.oci/config files configured.
+
+## Pre-requisites
+- Git is installed
+- SSH client is installed and configured
+- The ansible or ansible-core package is installed
+- OCI CLI installed including $HOME/.oci/config file configured
 
 ## Setup virtual environment for Python/ansible/oci:
 
@@ -14,23 +20,26 @@ $ ansible-galaxy collection install -f oracle.oci
 
 ## Set default parameters:
 
-<pre><code>$ export SAMPLE_PUBLIC_SSH_KEY=`cat ~/.ssh/id_rsa.pub`           # or any other pub SSH keyfile
-$ export SAMPLE_COMPARTMENT_OCID="ocid1.compartment.oc1..aaa…..n3j6q"
-$ export SAMPLE_SUBNET_OCID="ocid1.subnet.oc1.uk-london-1.aaa…..mp3q"
-$ export SAMPLE_AD_NAME="MrTj:UK-LONDON-1-AD-3"
+Define the OCI variables and the ssh public key. You maybe also want to change the instance image (type of OS) or instance shape.
 
-$ vi default_vars.yml
-
-Change, or add the instances you want to build.
-    instance_name: "oci-dev02"		# name of the instance
-    instance_ip: "10.0.1.102"		# provide an IP in the subnet (otherwise it’s random IP)
-    public_ip: false			# use false if private subnet, true when public subnet
+<pre><code>$ cp group_vars/all-example.yml group_vars/all.yml
+$ vi group_vars/all.yml
 </code></pre>
 
-You maybe also want to change the instance image (type of OS) or instance shape.
-
 ## Run the playbook:
-<pre><code>$ ansible-playbook create-oci-instances.yml
+<pre><code>$ ansible-playbook 
+    -e "instance_name=vm01" \
+    -e "instance_ip=10.0.1.102" \
+    -e "public_ip=False"  create-one-instance.yml
+</code></pre>
+
+Or for multiple instances with inventory file:
+<pre><code>$ cp inventory/hosts-example.ini inventory/hosts.ini
+$ vi inventory/hosts.ini
+
+Enter the instances name and hostvariables as provided
+
+$ ansible-playbook -i inventory/hosts.ini create-multiple-instances.yml
 </code></pre>
 
 

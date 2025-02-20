@@ -1,0 +1,27 @@
+---
+
+- name: Launch a compute instance and connect to it using SSH
+  hosts: localhost
+  gather_facts: true
+  collections:
+    - oracle.oci
+    - community.general
+
+  tasks:
+    - name: Create OCI instance and print result
+      oci_compute_instance:
+        availability_domain: "{{ instance_ad }}"
+        compartment_id: "{{ instance_compartment }}"
+        name: "{{ hostvars[item]['name'] }}"
+        image_id: "{{ instance_image }}"
+        shape: "{{ instance_shape }}"
+        create_vnic_details:
+            assign_public_ip: "{{ hostvars[item]['public_ip'] }}"
+            hostname_label: "{{ hostvars[item]['name'] }}"
+            subnet_id: "{{ instance_subnet_id }}"
+            private_ip: "{{ hostvars[item]['ip'] }}"
+        metadata:
+            ssh_authorized_keys: "{{ ssh_public_key }}"
+        freeform_tags: "{{ my_tags }}"
+      loop: "{{ groups['all'] }}"
+
