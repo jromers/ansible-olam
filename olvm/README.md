@@ -20,27 +20,31 @@ The playbooks can be used like this:
     $ vi default_vars.yml
     $ export "OVIRT_URL=https://OLVM-FQDN/ovirt-engine/api"
     $ export "OVIRT_USERNAME=admin@internal"
-    $ export "OVIRT_PASSWORD=<YOUR PASSWD>"
+    $ export "OVIRT_PASSWORD=CHANGE_ME"
 
     # create a single VM
-    $ ansible-playbook -i OLVM-FQDN, -u opc --key-file ~/.ssh/id_rsa \
-        -e "vm_name=oltest" -e "vm_ip_address=192.168.1.100" \
-        olvm_create_single_vm.yml
+    $ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
+        -e "vm_name=vm01" -e "vm_ip_address=192.168.1.101" \
+        olvm_create_one_vm.yml
+
+    # create multiple VMs with inventory file, see example hosts.ini file
+    $ ansible-playbook -i hosts.ini -u opc --key-file ~/.ssh/id_rsa \
+        olvm_create_multiple_vms.yml
 
     # delete a VM
-    $ ansible-playbook -i OLVM-FQDN, -u opc --key-file ~/.ssh/id_rsa \
-        -e "vm_name=oltest" olvm_delete_vm.yml
+    $ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
+        -e "vm_name=vm01" olvm_delete_vm.yml
 
     # live migrate a VM
-    $ ansible-playbook -i OLVM-FQDN, -u opc --key-file ~/.ssh/id_rsa \
-        -e "vm_name=ol04" -e "dst_kvmhost=KVM2" olvm_migrate_vm.yml
+    $ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
+        -e "vm_name=vm01" -e "dst_kvmhost=KVM2" olvm_migrate_vm.yml
 
-Note 1: using the OLVM server FQDN, appended with a comma, is a quick-way to not use a inventory file.
+Note 1: using the OLVM server FQDN (in this example olvm-engine.demo.local), appended with a comma, is a quick-way to not use a inventory file.
 
 Note 2: as it includes clear-text password, for better security you may want to encrypt the ``default_vars.yml`` file with the ansible-vault command. When running the playbook, ansible asks for a secret to decrypt the yml-file.
 
     $ ansible-vault encrypt default_vars.yml
-    $ ansible-playbook -i OLVM-FQDN, -u opc --key-file ~/.ssh/id_rsa \
+    $ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
         -e "vm_name=oltest" -e "vm_ip_address=192.168.1.100" \
         --ask-vault-pass olvm_create_single_vm.yml
 
@@ -55,9 +59,9 @@ Create an inventory and add one host with the details of your OLVM server, this 
 #### Credentials:
 Besides the standard SSH credential to access the target host, an additional credential is required to use the ovirt modules in the playbooks. It's based on credential type ``Red Hat Virtualization`` and you need to fill in the OLVM FQDN, username, password and CA File. For example:
 
-    Host (Authentication URL): 	https://OLVM-FQDN/ovirt-engine/api
+    Host (Authentication URL): 	https://olvm-engine.demo.local/ovirt-engine/api
     Username:			admin@internal
-    Password:			<passwd used for GUI logon>
+    Password:			CHANGE_ME
 
 #### Templates:
 Create a new job template and provide the following information:
@@ -77,7 +81,7 @@ By default the API connection to the OLVM server is insecure, if you want to use
 
 The CA file can be downloaded from the main OLVM web portal or directly from the OLVM server, for example:
 
-    $ scp root@OLVM-FQDN:/etc/pki/ovirt-engine/ca.pem /home/opc/ca.pem
+    $ scp root@olvm-engine.demo.local:/etc/pki/ovirt-engine/ca.pem /home/opc/ca.pem
 
 ## Variables used in the playbooks 
 
@@ -85,7 +89,7 @@ The CA file can be downloaded from the main OLVM web portal or directly from the
 | -------- | ------------- | ----------- |
 | OVIRT_URL | https://olvm-fqdn/ovirt-engine/api | The API URL of the OLVM server
 | OVIRT_USERNAME | admin@internal | The name of the user, same as used for GUI login
-| OVIRT_PASSWORD | your_secret_pw | The password of the user, same as used for GUI login
+| OVIRT_PASSWORD | CHANGE_ME | The password of the user, same as used for GUI login
 | olvm_cluster | Default | Name of the cluster, where VM should be created
 | olvm_template | OL9U4_x86_64-olvm-b234 |Name of the template, which should be used to create VM
 | vm_name | oltest | Name of the VM, will also be used as hostname
