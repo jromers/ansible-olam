@@ -28,7 +28,7 @@
     - name: Add KVM host to the cluster
       ovirt.ovirt.ovirt_host:
         auth: "{{ ovirt_auth }}"
-        cluster: Homelab
+        cluster: "{{ olvm_cluster | default('Default') }}"
         name: "{{ kvm_host_name }}"
         address: "{{ kvm_host_fqdn }}"
         password: "{{ kvm_host_pwd }}"
