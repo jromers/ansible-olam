@@ -28,8 +28,8 @@ $ vi group_vars/all.yml
 
 ## Run the playbook:
 <pre><code>$ ansible-playbook 
-    -e "instance_name=vm01" \
-    -e "instance_ip=10.0.1.102" \
+    -e "name=vm01" \
+    -e "ip=10.0.1.102" \
     -e "public_ip=False"  create-one-instance.yml
 </code></pre>
 
