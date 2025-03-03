@@ -13,7 +13,7 @@ First step is the configuration of the playbook variables which are mostly confi
 
 The playbooks can be used like this:
 
-```
+```console
 $ git clone https://github.com/jromers/ansible-olam.git
 $ cd ansible-olam/olvm
 $ ansible-galaxy collection install -f ovirt.ovirt
@@ -45,10 +45,12 @@ Note 1: using the OLVM server FQDN (in this example olvm-engine.demo.local), app
 
 Note 2: as it includes clear-text password, for better security you may want to encrypt the ``default_vars.yml`` file with the ansible-vault command. When running the playbook, ansible asks for a secret to decrypt the yml-file.
 
-    $ ansible-vault encrypt default_vars.yml
-    $ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
-        -e "vm_name=oltest" -e "vm_ip_address=192.168.1.100" \
-        --ask-vault-pass olvm_create_single_vm.yml
+```
+$ ansible-vault encrypt default_vars.yml
+$ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
+    -e "vm_name=oltest" -e "vm_ip_address=192.168.1.100" \
+    --ask-vault-pass olvm_create_single_vm.yml
+```
 
 ### Oracle Linux Automation Manager
 
