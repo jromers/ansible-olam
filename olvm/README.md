@@ -13,31 +13,33 @@ First step is the configuration of the playbook variables which are mostly confi
 
 The playbooks can be used like this:
 
-    $ git clone https://github.com/jromers/ansible-olam.git
-    $ cd ansible-olam/olvm
-    $ ansible-galaxy collection install -f ovirt.ovirt
-    $ ansible-galaxy collection install -f community.general
-    $ vi default_vars.yml
-    $ export "OVIRT_URL=https://OLVM-FQDN/ovirt-engine/api"
-    $ export "OVIRT_USERNAME=admin@internal"
-    $ export "OVIRT_PASSWORD=CHANGE_ME"
+```
+$ git clone https://github.com/jromers/ansible-olam.git
+$ cd ansible-olam/olvm
+$ ansible-galaxy collection install -f ovirt.ovirt
+$ ansible-galaxy collection install -f community.general
+$ vi default_vars.yml
+$ export "OVIRT_URL=https://OLVM-FQDN/ovirt-engine/api"
+$ export "OVIRT_USERNAME=admin@internal"
+$ export "OVIRT_PASSWORD=CHANGE_ME"
 
-    # create a single VM
-    $ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
-        -e "vm_name=vm01" -e "vm_ip_address=192.168.1.101" \
-        olvm_create_one_vm.yml
+# create a single VM
+$ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
+    -e "vm_name=vm01" -e "vm_ip_address=192.168.1.101" \
+    olvm_create_one_vm.yml
 
-    # create multiple VMs with inventory file, see example hosts.ini file
-    $ ansible-playbook -i hosts.ini -u opc --key-file ~/.ssh/id_rsa \
-        olvm_create_multiple_vms.yml
+# create multiple VMs with inventory file, see example hosts.ini file
+$ ansible-playbook -i hosts.ini -u opc --key-file ~/.ssh/id_rsa \
+    olvm_create_multiple_vms.yml
 
-    # delete a VM
-    $ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
-        -e "vm_name=vm01" olvm_delete_vm.yml
+# delete a VM
+$ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
+    -e "vm_name=vm01" olvm_delete_vm.yml
 
-    # live migrate a VM
-    $ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
-        -e "vm_name=vm01" -e "dst_kvmhost=KVM2" olvm_migrate_vm.yml
+# live migrate a VM
+$ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
+    -e "vm_name=vm01" -e "dst_kvmhost=KVM2" olvm_migrate_vm.yml
+```
 
 Note 1: using the OLVM server FQDN (in this example olvm-engine.demo.local), appended with a comma, is a quick-way to not use a inventory file.
 
