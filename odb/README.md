@@ -1,4 +1,4 @@
-# Oracle DB - Ansible playbooks for Oracle Linux Virtualisation Manager using Database Templates
+# Ansible playbooks for Oracle Linux Virtualization Manager using Oracle Database Templates
 
 Create Oracle Database Single Instance using the Ansible playbooks and Database Templates for Oracle Linux KVM managed by Oracle Linux Virtualization Manager. Playbooks are tested with Ansible CLI commands on Oracle Linux and with Oracle Linux Automation Manager.
 
@@ -38,7 +38,7 @@ $ git clone https://github.com/jromers/ansible-olam.git
 $ cd ansible-olam/odb
 $ ansible-galaxy collection install -f ovirt.ovirt
 $ ansible-galaxy collection install -f community.general
-@ cp default_vars-example.yml default_vars.yml
+$ cp default_vars-example.yml default_vars.yml
 $ vi default_vars.yml
 ...
 Provide the values for the variables
@@ -50,7 +50,7 @@ $ export "OVIRT_PASSWORD=CHANGE_ME"
 # create a VM with a single instance Oracle Database:
 $ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
     -e "vm_name=vm01" -e "vm_ip_address=192.168.1.101" \
-    olvm_odb_si.yml
+    olvm-odb-si.yml
 ```
 
 Note 1: using the OLVM server FQDN (in this example olvm-engine.demo.local), appended with a comma, is a quick-way to not use a inventory file.
@@ -99,26 +99,22 @@ The CA file can be downloaded from the main OLVM web portal or directly from the
 | OVIRT_URL | https://olvm-fqdn/ovirt-engine/api | The API URL of the OLVM server
 | OVIRT_USERNAME | admin@internal | The name of the user, same as used for GUI login
 | OVIRT_PASSWORD | CHANGE_ME | The password of the user, same as used for GUI login
-| olvm_cluster | Default | Name of the cluster, where VM should be created
-| olvm_template | OL9U4_x86_64-olvm-b234 |Name of the template, which should be used to create VM
 | vm_name | oltest | Name of the VM, will also be used as hostname
 | vm_ip_address | 192.168.1.100 | Static IP address of VM, if DHCP is required cloud-init section in playbook should be changed
-| vm_ram | 2048MiB | Amount of memory of the VM
-| vm_cpu | 4 | Number of virtual CPUs sockets of the VM
-| vm_root_passwd | your_secret_root_pw | Root password of the VM, used bu cloud-init
+| vm_ha | false | Will this be a single instance with or without High Availability,can be true or false. Ignored when DHCP is used
+| asm_disk_size | 10GiB |When High Availability, this will be the ASM disk size, only one ASM disk is supported at the moment
+| olvm_cluster | Default | Name of the cluster, where VM should be created
+| olvm_template | OL9U4_x86_64-olvm-b234 |Name of the template, which should be used to create VM
+| olvm_storage_domain | VM-storage | The OLVM storage domain to deploy the VM
+| vm_ram | 4096MiB | Amount of memory of the VM
+| vm_cpu | 2 | Number of virtual CPUs sockets of the VM
+| vm_timezone | Europe/Amsterdam | Timezone for VM, default is Etc/GMT
+| vm_pubadap | eth0 | NIC interface in VM, default is eth0
 | vm_dns | 192.168.1.3 | DNS server to be used for VM
 | vm_dns_domain | demo.local | DNS domainto to be used for VM
 | vm_gateway | 192.168.1.1 | Default gateway to be used for VM
 | vm_netmask | 255.255.255.0 | Netmask to be used for VM
-| vm_timezone | Europe/Amsterdam | Timezone for VM
-| vm_user | opc | Standard user for Oracle provided template, otherwise use your own or root user
 | vm_user_sshpubkey | "ssh-rsa AAAA...YOUR KEY HERE...hj8= " | SSH Public key for stndard user
-| src_vm | oltest | VM used as source VM for cloning operation
-| src_vm_snapshot | base_snapshot | Name of snapshot of source VM, for cloning operation 
-| dst_vm | oltest_cloned | Name of destination VM for cloning operation
-| dst_kvmhost | KVM2 | Name (not hostname) of kvm host in OLVM cluster and destination for live-migration
-| vm_id | 76c76c8b-a9ad-414e-8274-181a1ba8948b | VM ID for the VM, used for rename of VM
-| vm_newname | oltest | New name for VM with vm_id, used for rename of VM
 | olvm_insecure | false | By default ``true``, but define ``false`` in case you need secure API connection
 | olvm_cafile | /home/opc/ca.pem | Location of CA file in case you wish alternative location
 
