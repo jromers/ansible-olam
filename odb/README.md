@@ -48,8 +48,8 @@ $ export "OVIRT_USERNAME=admin@internal"
 $ export "OVIRT_PASSWORD=CHANGE_ME"
 
 # create a VM with a single instance Oracle Database:
-$ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
-    -e "vm_name=vm01" -e "vm_ip_address=192.168.1.101" \
+$ ansible-playbook -i olvm-engine.demo.local, -u <ansible_user> --key-file ~/.ssh/id_rsa \
+    -e "vm_name=odb-si" -e "vm_ip_address=192.168.1.25" \
     olvm-odb-si.yml
 ```
 
