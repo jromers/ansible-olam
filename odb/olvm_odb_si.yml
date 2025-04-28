@@ -215,13 +215,6 @@
       when:
         - not netconfig.stat.exists
 
-    - name: Remove artifacts
-      ansible.builtin.file:
-        state: absent
-        path: "{{ item }}"
-      loop:
-        - buffer
-
     - name: Print out VM logfile information
       debug:
         msg: "VM deployed, check progress with 'ssh -i ~/.ssh/id_rsa cloud-user@{{ vm_ip_address }} tail -f /u01/racovm/buildsingle.log'"
