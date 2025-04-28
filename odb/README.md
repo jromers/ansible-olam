@@ -104,7 +104,7 @@ The CA file can be downloaded from the main OLVM web portal or directly from the
 | vm_ha | false | Will this be a single instance with or without High Availability,can be true or false. Ignored when DHCP is used
 | asm_disk_size | 10GiB |When High Availability, this will be the ASM disk size, only one ASM disk is supported at the moment
 | olvm_cluster | Default | Name of the cluster, where VM should be created
-| olvm_template | OL9U4_x86_64-olvm-b234 |Name of the template, which should be used to create VM
+| olvm_template | OLVM-OL8U10-19260DBRAC-KVM |Name of the Oracle DB template, which should be used to create VM
 | olvm_storage_domain | VM-storage | The OLVM storage domain to deploy the VM
 | vm_ram | 4096MiB | Amount of memory of the VM
 | vm_cpu | 2 | Number of virtual CPUs sockets of the VM
