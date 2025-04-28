@@ -56,7 +56,7 @@ $ ansible-playbook -i olvm-engine.demo.local, -u <ansible_user> --key-file ~/.ss
 
 Note 1: using the OLVM server FQDN (in this example olvm-engine.demo.local), appended with a comma, is a quick-way to not use a inventory file.
 
-Note 2: the ``vm_ip_address`` may be omitted, in that case the VM will provisioned for DHCP
+Note 2: the ``vm_ip_address`` may be omitted, in that case the VM will be provisioned for DHCP
 
 ### Oracle Linux Automation Manager
 
@@ -100,8 +100,8 @@ The CA file can be downloaded from the main OLVM web portal or directly from the
 | OVIRT_URL | https://olvm-fqdn/ovirt-engine/api | The API URL of the OLVM server
 | OVIRT_USERNAME | admin@internal | The name of the user, same as used for GUI login
 | OVIRT_PASSWORD | CHANGE_ME | The password of the user, same as used for GUI login
-| vm_name | oltest | Name of the VM, will also be used as hostname
-| vm_ip_address | 192.168.1.100 | Static IP address of VM, if DHCP is required cloud-init section in playbook should be changed
+| vm_name | odb-si | Name of the VM, will also be used as hostname
+| vm_ip_address | 192.168.1.25 | Static IP address of VM, if omitted DHCP will be used
 | vm_ha | false | Will this be a single instance with or without High Availability,can be true or false. Ignored when DHCP is used
 | asm_disk_size | 10GiB |When High Availability, this will be the ASM disk size, only one ASM disk is supported at the moment
 | olvm_cluster | Default | Name of the cluster, where VM should be created
