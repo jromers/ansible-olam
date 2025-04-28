@@ -1,0 +1,58 @@
+#
+# Configuration for deployment of Oracle Database templates
+#
+# Variables for Oracle Database VM:
+#
+# Name of the VM, which is also used as hostname
+vm_name: odb-si
+
+# IP address of the VM, if omitted DHCP will be used
+vm_ip_address: 192.168.1.25
+
+# Will this be a single instance with or without High Availability,
+# can be true or false. Ignored when DHCP is used
+vm_ha: false
+
+# When High Availability, this will be the ASM disk size,
+# only one ASM disk is supported at the moment
+asm_disk_size: 10GiB
+
+# Variables based on OLVM configuration:
+#
+# Cluster in your OLVM infrastructure
+olvm_cluster: Default
+
+# The ODB template that will be used, download the template
+# from oracle.com and import with OLVM GUI
+olvm_template: OLVM-OL8U10-19260DBRAC-KVM
+
+# The OLVM storage domain to deploy the VM
+olvm_storage_domain: VM-storage
+
+# CPU and RAM configuration, if omitted the default
+# will be used (2CPU, 4096 GB RAM)
+vm_ram: 4096MiB
+vm_cpu: 2
+
+# Variables used for cloud-init:
+#
+# Timezone for VM
+vm_timezone: Europe/Amsterdam
+
+# NIC interface in VM, default is eth0
+vm_pubadap: eth0
+
+#  DNS domain name of VM
+vm_dns_domain: demo.local
+
+# DNS server
+vm_dns: 192.168.1.3
+
+# Network Netmask
+vm_netmask: 255.255.255.0
+
+# Name of network gateway
+vm_gateway: 192.168.1.1
+
+# SSH Public-key for default oracle/cloud-user.
+vm_user_sshpubkey: "ssh-rsa AAAAB3Nz...............bhj8="
