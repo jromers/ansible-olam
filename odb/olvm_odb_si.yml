@@ -100,11 +100,6 @@
           wait: true
         register: disk_details
 
-      - name: Pause for 20 seconds 
-        ansible.builtin.pause:
-          prompt: "Wait until ASM disk is ready"
-          seconds: 10
-
       - name: Creating udev rules file with OLVM shareable disk id
         copy:
           dest: /tmp/70-deploycluster.rules
@@ -124,6 +119,10 @@
       ovirt_auth:
         ovirt_auth: "{{ ovirt_auth }}"
         state: absent
+
+    - name: Pause for 20 seconds to spin up VM
+      ansible.builtin.pause:
+        seconds: 20
 
     - name: Add host to in-memory host file
       ansible.builtin.add_host:
