@@ -34,6 +34,7 @@ First step is the configuration of the playbook variables which are mostly confi
 The playbooks can be used like this:
 
 ```console
+$ sudo dnf install -y ansible-core git
 $ git clone https://github.com/jromers/ansible-olam.git
 $ cd ansible-olam/odb
 $ ansible-galaxy collection install -f ovirt.ovirt
