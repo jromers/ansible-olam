@@ -3,7 +3,7 @@
 # Configure default_vars.yml to setup default infrastrcuture variables
 #
 
-- hosts: all
+- hosts: olvm
   become: yes
   become_method: sudo
   
@@ -38,7 +38,6 @@
         memory: "{{ vm_ram | default('4096MiB') }}"
         cpu_sockets: "{{ vm_cpu | default('2') }}"
         state: running
-        wait: yes
         cloud_init:
           host_name: "{{ vm_name }}"
           user_name: cloud-user
@@ -65,7 +64,6 @@
         cpu_sockets: "{{ vm_cpu | default('2') }}"
         high_availability: "{{ vm_ha | default('false') }}"
         state: running
-        wait: yes
         cloud_init:
           host_name: "{{ vm_name + '.' + vm_dns_domain }}"
           user_name: cloud-user
@@ -111,6 +109,10 @@
           src: /tmp/70-deploycluster.rules
           dest: buffer/
           flat: yes
+
+      - name: Pause for 10 seconds to spin up VM
+        ansible.builtin.pause:
+          seconds: 10
       when:
         - vm_ha == true
         - vm_ip_address is defined
@@ -119,10 +121,6 @@
       ovirt_auth:
         ovirt_auth: "{{ ovirt_auth }}"
         state: absent
-
-    - name: Pause for 20 seconds to spin up VM
-      ansible.builtin.pause:
-        seconds: 20
 
     - name: Add host to in-memory host file
       ansible.builtin.add_host:
@@ -214,6 +212,21 @@
       when:
         - not netconfig.stat.exists
 
+
+- hosts: localhost
+  gather_facts: no
+  
+  vars_files:
+    - default_vars.yml
+
+  tasks:
+    - name: Remove artifacts
+      ansible.builtin.file:
+        state: absent
+        path: "{{ item }}"
+      loop:
+        - buffer
+
     - name: Print out VM logfile information
       debug:
-        msg: "VM deployed, check progress with 'ssh -i ~/.ssh/id_rsa cloud-user@{{ vm_ip_address }} tail -f /u01/racovm/buildsingle.log'"
+        msg: "VM deployed, check progress with 'ssh -i ~/.ssh/id_rsa cloud-user@{{ vm_name }} tail -f /u01/racovm/buildsingle.log'"

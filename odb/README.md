@@ -31,7 +31,7 @@ The following are deployment scenarios with the playbooks:
 
 First step is the configuration of the playbook variables which are mostly configured in ``default_vars.yml`` file. Variables may be used in the command line when not configured in the default variables file. Variables are required to configure your infrastructure settings for the OLVM server, VM configuration and cloud-init. See below table for explanation of the variables. 
 
-The playbooks can be used like this:
+The playbooks can be used like this (adjust to your server names, passwords and ip addresses):
 
 ```console
 $ sudo dnf install -y ansible-core git
@@ -39,6 +39,10 @@ $ git clone https://github.com/jromers/ansible-olam.git
 $ cd ansible-olam/odb
 $ ansible-galaxy collection install -f ovirt.ovirt
 $ ansible-galaxy collection install -f community.general
+$ cat << EOF > hosts.ini
+[olvm]
+olvm-engine.demo.local	# FQDN of OLVM engine
+EOF
 $ cp default_vars-example.yml default_vars.yml
 $ vi default_vars.yml
 ...
@@ -49,12 +53,12 @@ $ export "OVIRT_USERNAME=admin@internal"
 $ export "OVIRT_PASSWORD=CHANGE_ME"
 
 # create a VM with a single instance Oracle Database:
-$ ansible-playbook -i olvm-engine.demo.local, -u <ansible_user> --key-file ~/.ssh/id_rsa \
+$ ansible-playbook -i hosts.ini -u <ansible_user> --key-file ~/.ssh/id_rsa \
     -e "vm_name=odb-si" -e "vm_ip_address=192.168.1.25" \
     olvm_odb_si.yml
 ```
 
-Note 1: using the OLVM server FQDN (in this example olvm-engine.demo.local), appended with a comma, is a quick-way to not use a inventory file.
+Note 1: replace OLVM-FQDN with the name of your OLVM engine (in this example olvm-engine.demo.local)
 
 Note 2: the ``vm_ip_address`` may be omitted, in that case the VM will be provisioned for DHCP
 
