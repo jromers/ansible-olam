@@ -1,0 +1,21 @@
+---
+
+- name: "Create shareable disk {{ item }}"
+  ovirt.ovirt.ovirt_disk:
+    auth: "{{ ovirt_auth }}"
+    name: "{{ item }}"
+    description: "deployed by deploycluster (ansible)"
+    size: "{{ asm_disk_size }}"
+    format: raw
+    shareable: true
+    storage_domain: "{{ olvm_storage_domain }}"
+    state: present
+    wait: true
+  register: disk_details
+
+- name: Creating udev rules file with OLVM shareable disk id
+  ansible.builtin.lineinfile:
+    path: /tmp/70-deploycluster.rules
+    insertafter: EOF
+    line: 'SUBSYSTEM=="block", ENV{DEVTYPE}=="disk", ACTION=="add|change", ENV{ID_SCSI_SERIAL}=="{{ disk_details.id }}", SYMLINK+="deploycluster/{{ item }}"'
+
