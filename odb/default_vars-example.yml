@@ -13,8 +13,14 @@ vm_ip_address: 192.168.1.25
 # can be true or false. Ignored when DHCP is used
 vm_ha: false
 
-# When High Availability, this will be the ASM disk size,
-# only one ASM disk is supported at the moment
+# When single instance HA or Oracle RAC, define the names
+# of the ASM disks in below list variable.
+# They will have names such as asm0, asm1...asmN
+asm_disks:
+  - asm0
+  - asm1
+
+# Define the size of the ASM disk
 asm_disk_size: 10GiB
 
 # Variables based on OLVM configuration:

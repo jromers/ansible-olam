@@ -18,6 +18,13 @@
       when: 
         - vm_name is not defined
 
+    - name: Verify DHCP and HA are not combined
+      ansible.builtin.fail:
+        msg: "The playbook can't deploy a single instance DB with DHCP and HA enabled."
+      when: 
+        - vm_ha == true
+        - vm_ip_address is not defined
+
     - name: Login to OLVM manager
       ovirt_auth:
         url: "{{ lookup('env', 'OVIRT_URL') }}"
@@ -28,7 +35,27 @@
       tags:
         - always
 
-    - name: Create and deploy VM from template {{ olvm_template }} - DHCP
+    - block:
+      - name: Create temporary udev rules file
+        ansible.builtin.copy:
+          content: ""
+          dest: /tmp/70-deploycluster.rules
+          mode: "0644"
+
+      - name: Create ASM disks for Oracle RAC
+        ansible.builtin.include_tasks: "olvm_odb_build_asm.yml"
+        with_items:
+          - "{{ asm_disks }}"
+
+      - name: Copy udev rules file to buffer
+        fetch:
+          src: /tmp/70-deploycluster.rules
+          dest: buffer/
+          flat: yes
+      when:
+        - vm_ha == true
+
+    - name: Deploy VM from template {{ olvm_template }} - DHCP
       ovirt_vm:
         auth: "{{ ovirt_auth }}"
         name: "{{ vm_name }}"
@@ -53,7 +80,7 @@
       when:
         - vm_ip_address is not defined
 
-    - name: Create and deploy VM from template {{ olvm_template }} - Static IP
+    - name: Deploy VM from template {{ olvm_template }} - Static IP
       ovirt_vm:
         auth: "{{ ovirt_auth }}"
         name: "{{ vm_name }}"
@@ -83,39 +110,18 @@
       when:
         - vm_ip_address is defined
 
-    - block:
-      - name: Create shareable disk for Oracle DB HA configuration
-        ovirt.ovirt.ovirt_disk:
-          auth: "{{ ovirt_auth }}"
-          name: asm0
-          description: "deployed by deploycluster (ansible)"
-          vm_name: "{{ vm_name }}"
-          size: "{{ asm_disk_size }}"
-          format: raw
-          interface: virtio_scsi
-          shareable: true
-          storage_domain: "{{ olvm_storage_domain }}"
-          wait: true
-        register: disk_details
-
-      - name: Creating udev rules file with OLVM shareable disk id
-        copy:
-          dest: /tmp/70-deploycluster.rules
-          content: |
-            SUBSYSTEM=="block", ENV{DEVTYPE}=="disk", ACTION=="add|change", ENV{ID_SCSI_SERIAL}=="{{ disk_details.id }}", SYMLINK+="deploycluster/asm0"
-
-      - name: Copy udev rules file to buffer
-        fetch:
-          src: /tmp/70-deploycluster.rules
-          dest: buffer/
-          flat: yes
-
-      - name: Pause for 10 seconds to spin up VM
-        ansible.builtin.pause:
-          seconds: 10
+    - name: "Attach ASM disks to {{ vm_name }} VM"
+      ovirt.ovirt.ovirt_disk:
+        auth: "{{ ovirt_auth }}"
+        name: "{{ item }}"
+        vm_name: "{{ vm_name }}"
+        interface: virtio_scsi
+        state: attached
+        activate: true
+      with_items:
+        - "{{ asm_disks }}"
       when:
         - vm_ha == true
-        - vm_ip_address is defined
 
     - name: Cleanup OLVM auth token
       ovirt_auth:
@@ -127,12 +133,14 @@
         name: "{{ vm_name }}"
         groups: odb_vm
 
-
 - hosts: odb_vm
   remote_user: cloud-user
   become: yes
   become_method: sudo
   gather_facts: no
+
+  vars:
+    all_asm_disks_paths: ""
   
   vars_files:
     - default_vars.yml
@@ -142,7 +150,7 @@
     - block:
       - name: End play cause this is DHCP provisioned
         debug:
-          msg: "VM deployed, check progress with 'ssh -i ~/.ssh/id_rsa cloud-user@<dhcp_address> tail -f /u01/racovm/buildsingle.log'"
+          msg: "VM deployed, check progress with 'ssh -i ~/.ssh/<private-key> cloud-user@<dhcp_address> tail -f /u01/racovm/buildsingle.log'"
 
       - meta: end_play
       delegate_to: localhost
@@ -160,20 +168,22 @@
 
       - name: Run udevadm to create device file
         shell: |
+          /sbin/udevadm control -R
           /sbin/udevadm trigger -s block -c add
         args:
           executable: /bin/bash
 
-      - name: Check if /dev/deploycluster/asm0 exists
-        stat:
-          path: /dev/deploycluster/asm0
-        register: udevfile
+      - name: Creat device strings for ASM disks
+        ansible.builtin.set_fact:
+          asm_dev_strings: "/dev/deploycluster/{{ ' /dev/deploycluster/'.join(asm_disks) }}"
 
-      - name: Print out udev information
-        debug:
-          msg: "/dev/deploycluster/asm0 does exist"
-        when:
-          - udevfile.stat.exists
+      - name: Create netconfig.ini file from template - with HA
+        ansible.builtin.template:
+          src: netconfig-siha-ini.j2
+          dest: /u01/racovm/netconfig.ini
+          owner: oracle
+          group: oinstall
+          mode: "0644"
       when: 
         - vm_ha == true
 
@@ -186,16 +196,6 @@
         mode: "0644"
       when: 
         - vm_ha == false
-
-    - name: Create netconfig.ini file from template - with HA
-      ansible.builtin.template:
-        src: netconfig-siha-ini.j2
-        dest: /u01/racovm/netconfig.ini
-        owner: oracle
-        group: oinstall
-        mode: "0644"
-      when: 
-        - vm_ha == true
 
     - name: Check if netconfig.sh was already done
       stat:
@@ -229,4 +229,4 @@
 
     - name: Print out VM logfile information
       debug:
-        msg: "VM deployed, check progress with 'ssh -i ~/.ssh/id_rsa cloud-user@{{ vm_name }} tail -f /u01/racovm/buildsingle.log'"
+        msg: "VM deployed, check progress with 'ssh -i ~/.ssh/<private-key> cloud-user@{{ vm_name }} tail -f /u01/racovm/buildsingle.log'"

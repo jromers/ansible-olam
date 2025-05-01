@@ -25,7 +25,7 @@ The following are deployment scenarios with the playbooks:
 
 * Single instance with IP address from DHCP
 * Single instance with static IP address
-* Single instance with static IP address, with High Availabity and one disk to configure ASM
+* Single instance with static IP address, with High Availabity and N disks to configure ASM
 
 ### Ansible CLI
 
@@ -107,6 +107,7 @@ The CA file can be downloaded from the main OLVM web portal or directly from the
 | vm_name | odb-si | Name of the VM, will also be used as hostname
 | vm_ip_address | 192.168.1.25 | Static IP address of VM, if omitted DHCP will be used
 | vm_ha | false | Will this be a single instance with or without High Availability,can be true or false. Ignored when DHCP is used
+| asm_disks | asm0 | List with ASM disks names, such as asm0, asm1, asm3. With RAC minimal five ASM disks are recommended
 | asm_disk_size | 10GiB |When High Availability, this will be the ASM disk size, only one ASM disk is supported at the moment
 | olvm_cluster | Default | Name of the cluster, where VM should be created
 | olvm_template | OLVM-OL8U10-19260DBRAC-KVM |Name of the Oracle DB template, which should be used to create VM
