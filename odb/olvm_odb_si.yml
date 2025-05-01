@@ -42,7 +42,7 @@
           dest: /tmp/70-deploycluster.rules
           mode: "0644"
 
-      - name: Create ASM disks for Oracle RAC
+      - name: Create ASM disks for Oracle DB single instance, HA
         ansible.builtin.include_tasks: "olvm_odb_build_asm.yml"
         with_items:
           - "{{ asm_disks }}"

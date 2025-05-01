@@ -1,0 +1,64 @@
+#
+# Configuration for deployment of Oracle Database templates
+#
+# Variables for Oracle Database VM:
+#
+# Name of the VM, which is also used as hostname
+vm_name: odb-si
+
+# IP address of the VM, if omitted DHCP will be used
+vm_ip_address: 192.168.178.25
+
+# Will this be a single instance with or without High Availability,
+# can be true or false. Ignored when DHCP is used
+vm_ha: true
+
+# When single instance HA or Oracle RAC, define the names
+# of the ASM disks in below list variable.
+# They will have names such as asm0, asm1...asmN
+asm_disks:
+  - asm0
+  - asm1
+
+# Define the size of the ASM disk
+asm_disk_size: 10GiB
+
+# Variables based on OLVM configuration:
+#
+# Cluster in your OLVM infrastructure
+olvm_cluster: Default
+
+# The ODB template that will be used, download the template
+# from oracle.com and import with OLVM GUI
+olvm_template: OLVM-OL8U10-19260DBRAC-KVM
+
+# The OLVM storage domain to deploy the VM
+olvm_storage_domain: VM-storage
+
+# CPU and RAM configuration, if omitted the default
+# will be used (2CPU, 4096 GB RAM)
+vm_ram: 4096MiB
+vm_cpu: 2
+
+# Variables used for cloud-init:
+#
+# Timezone for VM
+vm_timezone: Europe/Amsterdam
+
+# NIC interface in VM, default is eth0
+vm_pubadap: eth0
+
+#  DNS domain name of VM
+vm_dns_domain: fl390.local
+
+# DNS server
+vm_dns: 192.168.178.3
+
+# Network Netmask
+vm_netmask: 255.255.255.0
+
+# Name of network gateway
+vm_gateway: 192.168.178.1
+
+# SSH Public-key for default oracle/cloud-user.
+vm_user_sshpubkey: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCn3b0hJHoPF+v4NxlCGmTWqp5dIy8HqdkcarU4T4gQvBhleAgtNBJWWeVYNFNVGyQLJV9kLFNx6TU5ccRO/VNlYJfM8oYdjLzaPMN6XmFwdSIzEv2Lo5u4oupqd+aUPvCdqbwyvRe77uv3Wpcu5YUxNLwk7py0BkgdPjPjDjW3eEV6cglrjxAzQHHRiArUwVOHF+Ojx1BeysMjap2P+lEDV7LZLxbCUL66rw4ctb5CsbrMom9IS/CwZVZrmuZwO3JIljpSul6EaxDP7rDa74OgHeo5zMxPALqpNPLP33KZWr6aQedWPYYh2cCdsIZFRoaEzPXE+oPrNj8kVnTw+sji7mLy3fic6MBkHHdidmLpQ4UB3qK6rnLWzAMv0O0C7lyx31ZpzSxjyafWSAMjCQmMzv3NdbJOuqJZS7vg+KAgNYZtWy4bhF+zPUCNHX1VizeMkowpio396RmvpaPiKIzxcpNFTNhreRJJKdmbNqCvdBdAHDBgPWJ/rLS5yYrbhj8= oci-olam"
