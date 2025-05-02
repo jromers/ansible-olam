@@ -7,6 +7,9 @@
   become: yes
   become_method: sudo
   
+  vars:
+    asm_disks_exists: [ ]
+
   vars_files:
     - default_vars.yml
 
@@ -36,6 +39,17 @@
         - always
 
     - block:
+      - name: Verify if ASM disk names are already in use
+        ansible.builtin.include_tasks: "odb_verify_asm.yml"
+        with_items:
+          - "{{ asm_disks }}"
+
+      - name: Fail the build when ASM disk names are already in use
+        ansible.builtin.fail:
+          msg: "ASM Disk name(s) {{ asm_disks_exists }} already occupied. If you think the ASM disk(s) are not in use, remove the disk in OLVM or choose other ASM disk names"
+        when:
+          - asm_disks_exists | length != 0
+
       - name: Create temporary udev rules file
         ansible.builtin.copy:
           content: ""
@@ -43,7 +57,7 @@
           mode: "0644"
 
       - name: Create ASM disks for Oracle DB single instance, HA
-        ansible.builtin.include_tasks: "olvm_odb_build_asm.yml"
+        ansible.builtin.include_tasks: "odb_build_asm.yml"
         with_items:
           - "{{ asm_disks }}"
 

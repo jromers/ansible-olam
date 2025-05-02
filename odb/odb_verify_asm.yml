@@ -1,0 +1,13 @@
+---
+
+- name: "Check if ASM disk {{ item }} is already in use"
+  ovirt.ovirt.ovirt_disk_info:
+    auth: "{{ ovirt_auth }}"
+    pattern: name="{{ item }}"
+  register: result
+
+- name: Flag disk when it is already in use
+  set_fact:
+    asm_disks_exists: "{{ asm_disks_exists + [ item ] }}"
+  when:
+    - result.ovirt_disks | length != 0
