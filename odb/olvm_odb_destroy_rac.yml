@@ -11,7 +11,7 @@
     - name: Verify if it is OK to destroy the cluster
       ansible.builtin.pause:
         prompt: |
-          WARNING!!!....Playbook paused...Are you sure you want to destroy the cluster?
+          WARNING!!!....Playbook paused...are you sure you want to destroy the cluster?
           Hit <ctrl-c> then <a> to abort the playbook (and keep your RAC safe)..
           Hit <enter> to continue and  your RAC cluster will be destroyed.
 
@@ -25,7 +25,7 @@
       tags:
         - always
 
-    - name: Delete the VM {{ item.value.vm_name }}
+    - name: Delete the RAC VMs
       ovirt_vm:
         auth: "{{ ovirt_auth }}"
         state: absent
