@@ -48,7 +48,7 @@ $ export "OVIRT_PASSWORD=CHANGE_ME"
 ```
 **Note**: replace FQDN with the fully qualified domain name of your OLVM engine (in this example olvm-engine.demo.local)
 
-####Single Instance (optional with HA):
+#### Single Instance (optional with HA):
 
 After configuration is defined in the ``default_vars.yml`` file, the single instance Oracle Database will be deployed with the ``olvm_odb_si.yml`` playbook:
 
@@ -65,7 +65,7 @@ $ ansible-playbook -i hosts.ini -u <ansible_user> --key-file ~/.ssh/id_rsa \
 ```
 **Note**: the ``vm_ip_address`` may be omitted, in that case the VM will be provisioned for DHCP
 
-####RAC cluster:
+#### RAC cluster:
 
 Configiration of the variables for the RAC cluster is somewhat more complex, each node in the RAC cluster has multiple IP addresses with corresponding hostnames. In order to provide these configuration details for each node, an Ansible dictionary is used and defines in the ``default_vars.yml`` file.
 
