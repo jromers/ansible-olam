@@ -1,0 +1,87 @@
+#
+# Configuration for deployment of Oracle Database templates
+#
+# Variables for Oracle Database VM:
+#
+rac_nodes:
+  1:
+    vm_name: "odb-rac1"
+    vm_ip_address: "192.168.1.71"
+    vm_name_priv: "odb-rac1-priv"
+    vm_ip_address_priv: "192.168.2.71"
+    vm_name_vip: "odb-rac1-vip"
+    vm_ip_address_vip: "192.168.1.81"
+    
+  2:
+    vm_name: "odb-rac2"
+    vm_ip_address: "192.168.1.72"
+    vm_name_priv: "odb-rac2-priv"
+    vm_ip_address_priv: "192.168.2.72"
+    vm_name_vip: "odb-rac2-vip"
+    vm_ip_address_vip: "192.168.1.82"
+    
+#  3:
+#    vm_name: "odb-rac3"
+#    vm_ip_address: "192.168.1.73"
+#    vm_name_priv: "odb-rac3-priv"
+#    vm_ip_address_priv: "192.168.2.73"
+#    vm_name_vip: "odb-rac3-vip"
+#    vm_ip_address_vip: "192.168.1.83"
+
+# RAC specific variables
+rac_name: crs64bitR2
+rac_scanname: odb-rac-scan
+rac_scan_ip_address: 192.168.1.86
+
+# With High Availability and RAC, this will be the ASM disk size
+asm_disk_size: 25GiB
+
+# When single instance HA or Oracle RAC, how many ASM disk
+# do you want? They will have names as asm0, asm1...asmN
+asm_disks:
+  - asm0
+  - asm1
+  - asm2
+
+# Variables based on OLVM configuration:
+#
+# Cluster in your OLVM infrastructure
+olvm_cluster: Default
+
+# The ODB template that will be used, download the template
+# from oracle.com and import with OLVM GUI
+olvm_template: OLVM-OL8U10-19260DBRAC-KVM
+
+# The OLVM storage domain to deploy the VM
+olvm_storage_domain: VM-storage
+
+# CPU and RAM configuration, if omitted the default
+# will be used (2CPU, 4096 GB RAM)
+vm_ram: 4096MiB
+vm_cpu: 2
+
+# Variables used for cloud-init:
+#
+# Timezone for VM, default is GMT
+vm_timezone: Europe/Amsterdam
+
+# NIC interface in the VM, default is eth0 and used for public interface
+# the second interface is used for RAC private traffic
+vm_pubadap: eth0
+vm_privadap: eth1
+
+#  DNS domain name of VM
+vm_dns_domain: demo.local
+
+# DNS server
+vm_dns: 192.168.1.3
+
+# Network Netmask
+vm_netmask: 255.255.255.0
+vm_netmask_priv: 255.255.255.0
+
+# Name of network gateway
+vm_gateway: 192.168.1.1
+
+# SSH Public-key for the default cloud-user in the VM.
+vm_user_sshpubkey: "ssh-rsa AAAAB3Nz...............bhj8="

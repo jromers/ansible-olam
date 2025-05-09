@@ -3,13 +3,12 @@
 # Configure default_vars.yml to setup default infrastrcuture variables
 #
 
-- hosts: olvm
+- name: Build single instance Oracle Database node, optionally with ASM disks for HA
+  hosts: olvm
   become: yes
   become_method: sudo
-  
   vars:
     asm_disks_exists: [ ]
-
   vars_files:
     - default_vars.yml
 
@@ -23,7 +22,7 @@
 
     - name: Verify DHCP and HA are not combined
       ansible.builtin.fail:
-        msg: "The playbook can't deploy a single instance DB with DHCP and HA enabled."
+        msg: "The playbook can't deploy a single instance Oracle DB with DHCP and HA enabled."
       when: 
         - vm_ha == true
         - vm_ip_address is not defined
@@ -38,15 +37,19 @@
       tags:
         - always
 
-    - block:
+    - name: Verify and build ASM disks when HA is required
+      block:
       - name: Verify if ASM disk names are already in use
         ansible.builtin.include_tasks: "odb_verify_asm.yml"
         with_items:
           - "{{ asm_disks }}"
 
-      - name: Fail the build when ASM disk names are already in use
-        ansible.builtin.fail:
-          msg: "ASM Disk name(s) {{ asm_disks_exists }} already occupied. If you think the ASM disk(s) are not in use, remove the disk in OLVM or choose other ASM disk names"
+      - name: Ask on how to continue as we detected ASM disks already in use
+        ansible.builtin.pause:
+          prompt: |
+            Playbook paused...ASM disk(s) with name(s) {{ asm_disks_exists }} already in use.
+            Hit <ctrl-c> then <a> to abort when you want to protect the disks.
+            Hit <enter> to continue when you are sure the disks can be used.
         when:
           - asm_disks_exists | length != 0
 
@@ -61,7 +64,7 @@
         with_items:
           - "{{ asm_disks }}"
 
-      - name: Copy udev rules file to buffer
+      - name: Fetch the generated udev rules file and store in buffer
         fetch:
           src: /tmp/70-deploycluster.rules
           dest: buffer/
@@ -118,13 +121,20 @@
           nic_netmask: "{{ vm_netmask }}"
           timezone: "{{ vm_timezone | default('Etc/GMT')}}"
           custom_script: |
+            write_files:
+              - content: |
+                  NODE1=
+                  NODE1IP=
+                path: /u01/racovm/netconfig.ini
+                owner: oracle:oinstall
+                permissions: "0644"
             runcmd:
               - touch /etc/cloud/cloud-init.disabled
         wait: true
       when:
         - vm_ip_address is defined
 
-    - name: "Attach ASM disks to {{ vm_name }} VM"
+    - name: "Attach ASM disks to {{ vm_name }} VM when HA is used"
       ovirt.ovirt.ovirt_disk:
         auth: "{{ ovirt_auth }}"
         name: "{{ item }}"
@@ -142,27 +152,27 @@
         ovirt_auth: "{{ ovirt_auth }}"
         state: absent
 
-    - name: Add host to in-memory host file
+    - name: Add host to in-memory hosts file
       ansible.builtin.add_host:
         name: "{{ vm_name }}"
         groups: odb_vm
 
-- hosts: odb_vm
+- name: Finalize the configuration and launch the buildsingle script
+  hosts: odb_vm
   remote_user: cloud-user
   become: yes
   become_method: sudo
   gather_facts: no
-
   vars:
     all_asm_disks_paths: ""
-  
   vars_files:
     - default_vars.yml
 
   tasks:
 
-    - block:
-      - name: End play cause this is DHCP provisioned
+    - name: End the play when the VM is provisioned with DHCP
+      block:
+      - name: Send message on how to monitor the Oracle DB build
         debug:
           msg: "VM deployed, check progress with 'ssh -i ~/.ssh/<private-key> cloud-user@<dhcp_address> tail -f /u01/racovm/buildsingle.log'"
 
@@ -171,7 +181,8 @@
       when: 
         - vm_ip_address is not defined
 
-    - block:
+    - name: Add ASM disk device names to OS when HA is used
+      block:
       - name: Copy udev rules file
         ansible.builtin.copy:
           src: buffer/70-deploycluster.rules
@@ -216,7 +227,7 @@
         path: /u01/racovm/.netconfig-done
       register: netconfig
 
-    - name: Run netconfig.sh and launch buildcluster
+    - name: Run netconfig.sh and launch buildsingle instance script
       shell: |
         cd /u01/racovm
         ./netconfig.sh -n1 -b
@@ -226,10 +237,9 @@
       when:
         - not netconfig.stat.exists
 
-
-- hosts: localhost
+- name: Remove the temporary files from the buffer and finish
+  hosts: localhost
   gather_facts: no
-  
   vars_files:
     - default_vars.yml
 
@@ -241,6 +251,6 @@
       loop:
         - buffer
 
-    - name: Print out VM logfile information
+    - name: Send message on how to monitor the Oracle DB build
       debug:
         msg: "VM deployed, check progress with 'ssh -i ~/.ssh/<private-key> cloud-user@{{ vm_name }} tail -f /u01/racovm/buildsingle.log'"
