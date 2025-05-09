@@ -4,7 +4,7 @@ Automate deployment of Oracle Database Single Instance and RAC cluster using the
 
 Modules from the [ovirt.ovirt Ansible collection](https://docs.ansible.com/ansible/latest/collections/ovirt/ovirt/index.html) are used and should be downloaded before using the playbooks. Read the collection documentation page for additional explanation or for extending the functionality of the playbooks.
 
-The playbooks are tested with Ansible CLI commands on Oracle Linux and with Oracle Linux Automation Manager, but should run on other ansible platforms too.
+The playbooks are tested with Ansible CLI commands on Oracle Linux and with Oracle Linux Automation Manager, but should run on other Ansible platforms too.
 
 ## How to setup a Oracle Database template in Oracle Linux Virtualization Manager
 
@@ -20,7 +20,7 @@ An Oracle Database template for Oracle Linux KVM/OLVM consists of single OVA fil
 
 ## How to use the playbooks
 
-The following are deployment scenarios with the playbooks:
+The following deployment scenarios can be used with the playbooks:
 
 * Single instance with IP address from DHCP
 * Single instance with static IP address
@@ -29,9 +29,9 @@ The following are deployment scenarios with the playbooks:
 
 ### Ansible CLI
 
-First step is the configuration of the playbook variables which are mostly configured in ``default_vars.yml`` file. Variables are required to configure your infrastructure settings for the OLVM server, VM and Database configuration and cloud-init. See below table for explanation of the variables. 
+First step is the configuration of the playbook variables which are configured in ``default_vars.yml`` file. Variables are required to configure your infrastructure settings for the OLVM server, VM and Database configuration and cloud-init. See below table for explanation of the variables. 
 
-The playbooks can be used like this (adjust to your server names, passwords and ip addresses):
+The playbooks can be used like this (change to your server names, passwords and ip addresses):
 
 ```console
 $ git clone https://github.com/jromers/ansible-olam.git
@@ -48,7 +48,7 @@ $ export "OVIRT_PASSWORD=CHANGE_ME"
 ```
 **Note**: replace FQDN with the fully qualified domain name of your OLVM engine (in this example olvm-engine.demo.local)
 
-#### Single Instance (optional with HA):
+#### Single Instance (HA is optional):
 
 After configuration is defined in the ``default_vars.yml`` file, the single instance Oracle Database will be deployed with the ``olvm_odb_si.yml`` playbook:
 
@@ -60,8 +60,8 @@ Provide the values for the variables
 ...
 ...
 $ ansible-playbook -i hosts.ini -u <ansible_user> --key-file ~/.ssh/id_rsa \
--e "vm_name=odb-si" -e "vm_ip_address=192.168.1.25" \
-olvm_odb_si.yml
+    -e "vm_name=odb-si" -e "vm_ip_address=192.168.1.25" \
+    olvm_odb_si.yml
 ```
 **Note**: the ``vm_ip_address`` may be omitted, in that case the VM will be provisioned for DHCP
 
@@ -115,10 +115,10 @@ $ ansible-playbook -i hosts.ini -u <ansible_user> --key-file ~/.ssh/id_rsa olvm_
 ### Oracle Linux Automation Manager
 
 #### Project:
-In Oracle Linux Automation Manager you can directly import the playbook repository from Github as Project. The top-level directory of the repository contains the requirements file to download the ovir.ovirt ansible collection.
+In Oracle Linux Automation Manager you can directly import the playbook repository from Github as Project. The top-level directory of the repository contains the requirements file to download the ovir.ovirt Ansible collection.
 
 #### Inventory:
-Create an inventory and add one host with the details of your OLVM server, this is the target host were you run the playbook. Make sure you have a Machine credential setup for this host so that ansible can SSH to it (run the ping Module for this host). 
+Create an inventory and add one host with the details of your OLVM server, this is the target host were you run the playbook. Make sure you have a Machine credential setup for this host so that Ansible can SSH to it (run the ping Module for this host). 
 
 #### Credentials:
 Besides the standard SSH credential to access the target host, an additional credential is required to use the ovirt modules in the playbooks. It's based on credential type ``Red Hat Virtualization`` and you need to fill in the OLVM FQDN, username, password and CA File. For example:
@@ -152,15 +152,15 @@ The CA file can be downloaded from the main OLVM web portal or directly from the
 | Variable | Example value | Description |
 | -------- | ------------- | ----------- |
 | OVIRT_URL | https://olvm-fqdn/ovirt-engine/api | The API URL of the OLVM server
-| OVIRT_USERNAME | admin@internal | The name of the user, same as used for GUI login
-| OVIRT_PASSWORD | CHANGE_ME | The password of the user, same as used for GUI login
-| vm_name | odb-si | Name of the VM, will also be used as hostname
-| vm_ip_address | 192.168.1.25 | Static IP address of VM, if omitted DHCP will be used
+| OVIRT_USERNAME | admin@internal | The name of the API user, same as used for the Admin GUI login
+| OVIRT_PASSWORD | CHANGE_ME | The password of the API user, same as used for the Admin GUI login
+| vm_name | odb-si | Name of the VM (single instance), will also be used as hostname
+| vm_ip_address | 192.168.1.25 | Static IP address of VM (single instance), if omitted DHCP will be used
 | vm_ha | false | Will this be a single instance with or without High Availability,can be true or false. Ignored when DHCP is used
-| rac_nodes | | Ansible dictionary to store RAC node specific network configuration
-| rac_name | crs64bitR2 |
-| rac_scanname | odb-rac-scan |
-| rac_scan_ip_address | 192.168.1.86 |
+| rac_nodes | | Ansible dictionary to store RAC node specific hostname and network configuration details
+| rac_name | crs64bitR2 | RAC Clustername
+| rac_scanname | odb-rac-scan | RAC scan name
+| rac_scan_ip_address | 192.168.1.86 | RAC scan IP Address
 | asm_disks | asm0 | Ansible list with ASM disks names, such as asm0, asm1, asm3. With RAC minimal five ASM disks are recommended
 | asm_disk_size | 10GiB |When High Availability, this will be the ASM disk size (all disks same size)
 | olvm_cluster | Default | Name of the cluster, where VM should be created
@@ -176,7 +176,7 @@ The CA file can be downloaded from the main OLVM web portal or directly from the
 | vm_gateway | 192.168.1.1 | Default gateway to be used for VM
 | vm_netmask | 255.255.255.0 | Netmask to be used for VM for public NIC
 | vm_netmask_priv | 255.255.255.0 | Netmask to be used for VM for private NIC
-| vm_user_sshpubkey | "ssh-rsa AAAA...YOUR KEY HERE...hj8= " | SSH Public key for stndard user
+| vm_user_sshpubkey | "ssh-rsa AAAA...YOUR KEY HERE...hj8= " | SSH Public key for Ansible remote user
 | olvm_insecure | false | By default ``true``, but define ``false`` in case you need secure API connection
 | olvm_cafile | /home/opc/ca.pem | Location of CA file in case you wish alternative location
 
