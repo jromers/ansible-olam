@@ -60,14 +60,14 @@ Provide the values for the variables
 ...
 ...
 $ ansible-playbook -i hosts.ini -u <ansible_user> --key-file ~/.ssh/id_rsa \
-    -e "vm_name=odb-si" -e "vm_ip_address=192.168.1.25" \
-    olvm_odb_si.yml
+-e "vm_name=odb-si" -e "vm_ip_address=192.168.1.25" \
+olvm_odb_si.yml
 ```
 **Note**: the ``vm_ip_address`` may be omitted, in that case the VM will be provisioned for DHCP
 
 #### RAC cluster:
 
-Configiration of the variables for the RAC cluster is somewhat more complex, each node in the RAC cluster has multiple IP addresses with corresponding hostnames. In order to provide these configuration details for each node, an Ansible dictionary is used and defines in the ``default_vars.yml`` file.
+Configiration of the variables for the RAC cluster is somewhat more complex, each node in the RAC cluster has multiple IP addresses with corresponding hostnames. In order to provide these configuration details for each node, an Ansible dictionary is used and defined in the ``default_vars.yml`` file.
 
 Here's an example of a three-node RAC cluster Ansible dictionary:
 
