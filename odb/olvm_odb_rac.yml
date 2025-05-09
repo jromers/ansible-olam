@@ -130,16 +130,6 @@
         ovirt_auth: "{{ ovirt_auth }}"
         state: absent
 
-    - name: Pause intentionally to verify configuration
-      ansible.builtin.pause:
-        prompt: |
-          Playbook paused...
-          Hit <ctrl-c> then <a> to abort 
-          Hit <enter> to continue 
-      when:
-        - debug == true
-
-
 - hosts: rac_vms
   remote_user: cloud-user
   become: yes

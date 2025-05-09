@@ -1,0 +1,46 @@
+---
+
+- name: Remove the ASM disks and RAC nodes on the OLVM cluster
+  hosts: olvm
+  become: yes
+  become_method: sudo
+  vars_files:
+    - default_vars.yml
+
+  tasks:
+    - name: Verify if it is OK to destroy the cluster
+      ansible.builtin.pause:
+        prompt: |
+          WARNING!!!....Playbook paused...Are you sure you want to destroy the cluster?
+          Hit <ctrl-c> then <a> to abort the playbook (and keep your RAC safe)..
+          Hit <enter> to continue and  your RAC cluster will be destroyed.
+
+    - name: Login to OLVM manager
+      ovirt_auth:
+        url: "{{ lookup('env', 'OVIRT_URL') }}"
+        username: "{{ lookup('env', 'OVIRT_USERNAME') }}"
+        password: "{{ lookup('env', 'OVIRT_PASSWORD') }}"
+        ca_file: "{{ olvm_cafile | default('/etc/pki/ovirt-engine/ca.pem') }}"
+        insecure: "{{ olvm_insecure | default(true) }}"
+      tags:
+        - always
+
+    - name: Delete the VM {{ item.value.vm_name }}
+      ovirt_vm:
+        auth: "{{ ovirt_auth }}"
+        state: absent
+        name: "{{ item.value.vm_name }}"
+      loop: "{{ lookup('dict', rac_nodes, wantlist=True) }}"
+
+    - name: "Create shareable disk {{ item }}"
+      ovirt.ovirt.ovirt_disk:
+        auth: "{{ ovirt_auth }}"
+        name: "{{ item }}"
+        state: absent
+      with_items:
+        - "{{ asm_disks }}"
+
+    - name: Cleanup OLVM auth token
+      ovirt_auth:
+        ovirt_auth: "{{ ovirt_auth }}"
+        state: absent
