@@ -1,17 +1,16 @@
 # Ansible playbooks for Oracle Linux Virtualization Manager using Oracle Database Templates
 
-Create Oracle Database Single Instance using the Ansible playbooks and Database Templates for Oracle Linux KVM managed by Oracle Linux Virtualization Manager. Playbooks are tested with Ansible CLI commands on Oracle Linux and with Oracle Linux Automation Manager.
+Automate deployment of Oracle Database Single Instance and RAC cluster using the Ansible playbooks and Database Templates for Oracle Linux KVM managed by Oracle Linux Virtualization Manager. 
 
-The playbooks uses modules from the [ovirt.ovirt Ansible collection](https://docs.ansible.com/ansible/latest/collections/ovirt/ovirt/index.html) which should be downloaded before using the playbooks. Read the collection documentation page for additional explanation or for extending the functionality of the playbooks.
+Modules from the [ovirt.ovirt Ansible collection](https://docs.ansible.com/ansible/latest/collections/ovirt/ovirt/index.html) are used and should be downloaded before using the playbooks. Read the collection documentation page for additional explanation or for extending the functionality of the playbooks.
+
+The playbooks are tested with Ansible CLI commands on Oracle Linux and with Oracle Linux Automation Manager, but should run on other ansible platforms too.
 
 ## How to setup a Oracle Database template in Oracle Linux Virtualization Manager
 
-Oracle provides templates (pre-configured, pre-built virtual machines) that are fully ready to deploy to a
-virtualized Oracle Linux Virtualization Manager environment. A typical template includes a guest operating
-system, database software, and configuration needed for deployment. 
+Oracle provides templates (pre-configured, pre-built virtual machines) that are fully ready to deploy to a virtualized Oracle Linux Virtualization Manager environment. A typical template includes a guest operating system, database software, and configuration needed for deployment. 
 
-An Oracle Database template for Oracle Linux KVM/OLVM consists of single OVA file (inside a zip file) that
-contains two virtual disks. The Oracle Database template for OLVM are available on [this download location at oracle.com](https://www.oracle.com/ng/database/technologies/rac/vm-db-templates.html)
+An Oracle Database template for Oracle Linux KVM/OLVM consists of single OVA file (inside a zip file) that contains two virtual disks. More background information on the template for Oracle KVM/OLVM environments and where to download from is available on [this download location at oracle.com](https://www.oracle.com/ng/database/technologies/rac/vm-db-templates.html) (version March 2025).
 
 1. Download the desired version of the Database Template to a staging area on one of the KVM Server hosts
 2. From Oracle Linux Virtualization Manager UI, import the staged Database Template.
@@ -25,16 +24,16 @@ The following are deployment scenarios with the playbooks:
 
 * Single instance with IP address from DHCP
 * Single instance with static IP address
-* Single instance with static IP address, with High Availabity and N x disks to configure ASM
+* Single instance with static IP address, with High Availabity and Nx disks for ASM
+* RAC cluster with Nx disks (N is a minimum of 5) for ASM
 
 ### Ansible CLI
 
-First step is the configuration of the playbook variables which are mostly configured in ``default_vars.yml`` file. Variables may be used in the command line when not configured in the default variables file. Variables are required to configure your infrastructure settings for the OLVM server, VM configuration and cloud-init. See below table for explanation of the variables. 
+First step is the configuration of the playbook variables which are mostly configured in ``default_vars.yml`` file. Variables are required to configure your infrastructure settings for the OLVM server, VM and Database configuration and cloud-init. See below table for explanation of the variables. 
 
 The playbooks can be used like this (adjust to your server names, passwords and ip addresses):
 
 ```console
-$ sudo dnf install -y ansible-core git
 $ git clone https://github.com/jromers/ansible-olam.git
 $ cd ansible-olam/odb
 $ ansible-galaxy collection install -f ovirt.ovirt
@@ -43,24 +42,75 @@ $ cat << EOF > hosts.ini
 [olvm]
 olvm-engine.demo.local	# FQDN of OLVM engine
 EOF
-$ cp default_vars-example.yml default_vars.yml
+$ export "OVIRT_URL=https://FQDN/ovirt-engine/api"
+$ export "OVIRT_USERNAME=admin@internal"
+$ export "OVIRT_PASSWORD=CHANGE_ME"
+```
+**Note**: replace FQDN with the fully qualified domain name of your OLVM engine (in this example olvm-engine.demo.local)
+
+####Single Instance (optional with HA):
+
+After configuration is defined in the ``default_vars.yml`` file, the single instance Oracle Database will be deployed with the ``olvm_odb_si.yml`` playbook:
+
+```console
+$ cp default_vars-si-example.yml default_vars.yml
 $ vi default_vars.yml
 ...
 Provide the values for the variables
 ...
-$ export "OVIRT_URL=https://OLVM-FQDN/ovirt-engine/api"
-$ export "OVIRT_USERNAME=admin@internal"
-$ export "OVIRT_PASSWORD=CHANGE_ME"
-
-# create a VM with a single instance Oracle Database:
+...
 $ ansible-playbook -i hosts.ini -u <ansible_user> --key-file ~/.ssh/id_rsa \
     -e "vm_name=odb-si" -e "vm_ip_address=192.168.1.25" \
     olvm_odb_si.yml
 ```
+**Note**: the ``vm_ip_address`` may be omitted, in that case the VM will be provisioned for DHCP
 
-Note 1: replace OLVM-FQDN with the name of your OLVM engine (in this example olvm-engine.demo.local)
+####RAC cluster:
 
-Note 2: the ``vm_ip_address`` may be omitted, in that case the VM will be provisioned for DHCP
+Configiration of the variables for the RAC cluster is somewhat more complex, each node in the RAC cluster has multiple IP addresses with corresponding hostnames. In order to provide these configuration details for each node, an Ansible dictionary is used and defines in the ``default_vars.yml`` file.
+
+Here's an example of a three-node RAC cluster Ansible dictionary:
+
+```console
+rac_nodes:
+  1:
+    vm_name: "odb-rac1"
+    vm_ip_address: "192.168.1.71"
+    vm_name_priv: "odb-rac1-priv"
+    vm_ip_address_priv: "192.168.2.71"
+    vm_name_vip: "odb-rac1-vip"
+    vm_ip_address_vip: "192.168.1.81"
+  2:
+    vm_name: "odb-rac2"
+    vm_ip_address: "192.168.1.72"
+    vm_name_priv: "odb-rac2-priv"
+    vm_ip_address_priv: "192.168.2.72"
+    vm_name_vip: "odb-rac2-vip"
+    vm_ip_address_vip: "192.168.1.82"
+  3:
+    vm_name: "odb-rac3"
+    vm_ip_address: "192.168.1.73"
+    vm_name_priv: "odb-rac3-priv"
+    vm_ip_address_priv: "192.168.2.73"
+    vm_name_vip: "odb-rac3-vip"
+    vm_ip_address_vip: "192.168.1.83"
+```
+**Note1**: To successfully deploy a RAC environment, DNS records for hostnames, scanname, and IPs described in the ``default_vars.yml`` file are required.
+
+**Note2**: It is recommended to have the private IP address (``vm_ip_address_priv``) in a different subnet, the VM template contains a second NIC interface.
+
+After configuration is defined in the ``default_vars.yml`` file, the RAC cluster will be deployed with the ``olvm_odb_rac.yml`` playbook:
+
+```console
+$ cp default_vars-rac-example.yml default_vars.yml
+$ vi default_vars.yml
+...
+Provide the values for the variables
+...
+...
+$ ansible-playbook -i hosts.ini -u <ansible_user> --key-file ~/.ssh/id_rsa olvm_odb_rac.yml
+```
+
 
 ### Oracle Linux Automation Manager
 
@@ -107,7 +157,11 @@ The CA file can be downloaded from the main OLVM web portal or directly from the
 | vm_name | odb-si | Name of the VM, will also be used as hostname
 | vm_ip_address | 192.168.1.25 | Static IP address of VM, if omitted DHCP will be used
 | vm_ha | false | Will this be a single instance with or without High Availability,can be true or false. Ignored when DHCP is used
-| asm_disks | asm0 | List with ASM disks names, such as asm0, asm1, asm3. With RAC minimal five ASM disks are recommended
+| rac_nodes | | Ansible dictionary to store RAC node specific network configuration
+| rac_name | crs64bitR2 |
+| rac_scanname | odb-rac-scan |
+| rac_scan_ip_address | 192.168.1.86 |
+| asm_disks | asm0 | Ansible list with ASM disks names, such as asm0, asm1, asm3. With RAC minimal five ASM disks are recommended
 | asm_disk_size | 10GiB |When High Availability, this will be the ASM disk size (all disks same size)
 | olvm_cluster | Default | Name of the cluster, where VM should be created
 | olvm_template | OLVM-OL8U10-19260DBRAC-KVM |Name of the Oracle DB template, which should be used to create VM
@@ -116,10 +170,12 @@ The CA file can be downloaded from the main OLVM web portal or directly from the
 | vm_cpu | 2 | Number of virtual CPUs sockets of the VM
 | vm_timezone | Europe/Amsterdam | Timezone for VM, default is Etc/GMT
 | vm_pubadap | eth0 | NIC interface in VM, default is eth0
+| vm_privadap | eth1 | NIC interface in VM for the private network, default is eth1
 | vm_dns | 192.168.1.3 | DNS server to be used for VM
 | vm_dns_domain | demo.local | DNS domainto to be used for VM
 | vm_gateway | 192.168.1.1 | Default gateway to be used for VM
-| vm_netmask | 255.255.255.0 | Netmask to be used for VM
+| vm_netmask | 255.255.255.0 | Netmask to be used for VM for public NIC
+| vm_netmask_priv | 255.255.255.0 | Netmask to be used for VM for private NIC
 | vm_user_sshpubkey | "ssh-rsa AAAA...YOUR KEY HERE...hj8= " | SSH Public key for stndard user
 | olvm_insecure | false | By default ``true``, but define ``false`` in case you need secure API connection
 | olvm_cafile | /home/opc/ca.pem | Location of CA file in case you wish alternative location
