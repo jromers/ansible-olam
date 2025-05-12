@@ -32,7 +32,7 @@
         name: "{{ item.value.vm_name }}"
       loop: "{{ lookup('dict', rac_nodes, wantlist=True) }}"
 
-    - name: "Create shareable disk {{ item }}"
+    - name: "Delete the shareable disk {{ item }}"
       ovirt.ovirt.ovirt_disk:
         auth: "{{ ovirt_auth }}"
         name: "{{ item }}"
