@@ -1,14 +1,14 @@
 ---
 
-# Configure default_vars.yml to setup default infrastrcuture variables
+# Before running the playbook, configure default_vars.yml first to setup 
+# default infrastrcuture variables
 #
 
 - name: Build single instance Oracle Database node, optionally with ASM disks for HA
-  hosts: olvm
-  become: yes
-  become_method: sudo
+  hosts: localhost
   vars:
     asm_disks_exists: [ ]
+    ansible_python_interpreter: "/usr/bin/python3"
   vars_files:
     - default_vars.yml
 
@@ -250,6 +250,7 @@
         path: "{{ item }}"
       loop:
         - buffer
+        - /tmp/70-deploycluster.rules
 
     - name: Send message on how to monitor the Oracle DB build
       debug:

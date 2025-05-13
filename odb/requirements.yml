@@ -1,0 +1,6 @@
+---
+collections:
+  - name: ovirt.ovirt
+  - name: community.general
+  - name: community.crypto
+  - name: ansible.posix

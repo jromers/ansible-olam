@@ -1,6 +1,7 @@
 ---
 
-# Configure default_vars.yml to setup default infrastrcuture variables
+# Before running the playbook, configure default_vars.yml first to setup
+# default infrastrcuture variables
 #
 
 - name: Generate SSH keys and configuration files before building VMs
@@ -64,11 +65,10 @@
         flat: yes
 
 - name: Build the ASM disks and RAC nodes on the OLVM cluster
-  hosts: olvm
-  become: yes
-  become_method: sudo
+  hosts: localhost
   vars:
     asm_disks_exists: [ ]
+    ansible_python_interpreter: "/usr/bin/python3"
   vars_files:
     - default_vars.yml
 
@@ -120,18 +120,12 @@
         dest: buffer/
         flat: yes
 
-    - name: Remove temporary udev rules file
-      ansible.builtin.file:
-        state: absent
-        path: /tmp/70-deploycluster.rules
-
     - name: Cleanup OLVM auth token
       ovirt_auth:
         ovirt_auth: "{{ ovirt_auth }}"
         state: absent
 
 - hosts: rac_vms
-  remote_user: cloud-user
   become: yes
   become_method: sudo
   gather_facts: no
@@ -187,7 +181,6 @@
         mode: '0644'
 
 - hosts: rac_vms,!rac_vm_first
-  remote_user: cloud-user
   become: yes
   become_method: sudo
   gather_facts: no
@@ -260,6 +253,7 @@
         - /tmp/id_rsa
         - /tmp/id_rsa.pub
         - /tmp/netconfig.ini
+        - /tmp/70-deploycluster.rules
 
     - name: Print out VM logfile information
       debug:
