@@ -39,10 +39,6 @@ $ sudo dnf install python3-ovirt-engine-sdk4
 $ git clone https://github.com/jromers/ansible-olam.git
 $ cd ansible-olam/odb
 $ ansible-galaxy collection install -r requirements.yml
-$ cat << EOF > hosts.ini
-[olvm]
-olvm-engine.demo.local	# FQDN of OLVM engine
-EOF
 $ export "OVIRT_URL=https://FQDN/ovirt-engine/api"
 $ export "OVIRT_USERNAME=admin@internal"
 $ export "OVIRT_PASSWORD=CHANGE_ME"
@@ -60,7 +56,7 @@ $ vi default_vars.yml
 Provide the values for the variables
 ...
 ...
-$ ansible-playbook -i hosts.ini -u <ansible_user> --key-file ~/.ssh/id_rsa \
+$ ansible-playbook -u cloud-user --key-file ~/.ssh/id_rsa \
     -e "vm_name=odb-si" -e "vm_ip_address=192.168.1.25" \
     olvm_odb_si.yml
 ```
@@ -109,7 +105,7 @@ $ vi default_vars.yml
 Provide the values for the variables
 ...
 ...
-$ ansible-playbook -i hosts.ini -u <ansible_user> --key-file ~/.ssh/id_rsa olvm_odb_rac.yml
+$ ansible-playbook -u cloud-user --key-file ~/.ssh/id_rsa olvm_odb_rac.yml
 ```
 
 
