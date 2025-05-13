@@ -5,7 +5,7 @@
 #
 
 - name: Generate SSH keys and configuration files before building VMs
-  hosts: localhost
+  hosts: olvm
   gather_facts: no
   vars:
     nodes: ""
@@ -65,7 +65,7 @@
         flat: yes
 
 - name: Build the ASM disks and RAC nodes on the OLVM cluster
-  hosts: localhost
+  hosts: olvm
   vars:
     asm_disks_exists: [ ]
     ansible_python_interpreter: "/usr/bin/python3"
@@ -238,7 +238,7 @@
         - not netconfig.stat.exists
 
 
-- hosts: localhost
+- hosts: olvm
   gather_facts: no
   vars_files:
     - default_vars.yml
