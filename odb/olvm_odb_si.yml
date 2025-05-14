@@ -8,7 +8,6 @@
   hosts: olvm
   vars:
     asm_disks_exists: [ ]
-    ansible_python_interpreter: "/usr/bin/python3"
   vars_files:
     - default_vars.yml
 
