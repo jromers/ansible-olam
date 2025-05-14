@@ -153,7 +153,7 @@
 
     - name: Add host to in-memory hosts file
       ansible.builtin.add_host:
-        name: "{{ vm_name }}"
+        name: "{{ vm_name + '.' + vm_dns_domain }}"
         groups: odb_vm
 
 - name: Finalize the configuration and launch the buildsingle script
