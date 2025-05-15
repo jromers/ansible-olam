@@ -64,6 +64,24 @@
       when:
         - vm_ip_address is not defined
 
+    - name: Do ASM disks status check and ask what to do when in use
+      block:
+      - name: Verify if ASM disk names are already in use
+        ansible.builtin.include_tasks: "odb_verify_asm.yml"
+        with_items:
+          - "{{ asm_disks }}"
+
+      - name: Ask on how to continue as we detected ASM disks already in use
+        ansible.builtin.pause:
+          prompt: |
+            Playbook paused...ASM disk(s) with name(s) {{ asm_disks_exists }} already in use.
+            Hit <ctrl-c> then <a> to abort when you want to protect the disks.
+            Hit <enter> to continue when you are sure the disks can be used.
+        when:
+          - asm_disks_exists | length != 0
+      when: 
+        - vm_ha == true
+
     - name: Create VM from template {{ olvm_template }}
       ovirt_vm:
         auth: "{{ ovirt_auth }}"
@@ -84,24 +102,8 @@
 
     - name: Preconfigure configuration files and ASM disks when HA is enabled
       block:
-      - name: Verify if ASM disk names are already in use
-        ansible.builtin.include_tasks: "verify_asm.yml"
-        with_items:
-          - "{{ asm_disks }}"
-
-      - name: Ask on how to continue as we detected ASM disks already in use
-        ansible.builtin.pause:
-          prompt: |
-            Playbook paused...ASM disk(s) with name(s) {{ asm_disks_exists }} already in use.
-            Hit <ctrl-c> then <a> to abort when you want to protect the disks.
-            Hit <enter> to continue when you are sure the disks can be used.
-        when:
-          - asm_disks_exists | length != 0
-
       - name: Create ASM disks for Oracle DB single instance, HA
-        ansible.builtin.include_tasks: "build_asm.yml"
-        when:
-          - asm_disks_exists | length == 0
+        ansible.builtin.include_tasks: "odb_build_asm.yml"
         with_items:
           - "{{ asm_disks }}"
 
