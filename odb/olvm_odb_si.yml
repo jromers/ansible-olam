@@ -67,7 +67,7 @@
     - name: Do ASM disks status check and ask what to do when in use
       block:
       - name: Verify if ASM disk names are already in use
-        ansible.builtin.include_tasks: "odb_verify_asm.yml"
+        ansible.builtin.include_tasks: "verify_asm.yml"
         with_items:
           - "{{ asm_disks }}"
 
@@ -103,7 +103,7 @@
     - name: Preconfigure configuration files and ASM disks when HA is enabled
       block:
       - name: Create ASM disks for Oracle DB single instance, HA
-        ansible.builtin.include_tasks: "odb_build_asm.yml"
+        ansible.builtin.include_tasks: "build_asm.yml"
         with_items:
           - "{{ asm_disks }}"
 
