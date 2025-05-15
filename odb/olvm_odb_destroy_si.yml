@@ -8,12 +8,12 @@
     - default_vars.yml
 
   tasks:
-    - name: Verify if it is OK to destroy the cluster
+    - name: Verify if it is OK to destroy the Oracle DB VM
       ansible.builtin.pause:
         prompt: |
-          WARNING!!!....Playbook paused...are you sure you want to destroy the cluster?
-          Hit <ctrl-c> then <a> to abort the playbook (and keep your RAC safe)..
-          Hit <enter> to continue and  your RAC cluster will be destroyed.
+          WARNING!!!....Playbook paused...are you sure you want to destroy the Oracle DB VM?
+          Hit <ctrl-c> then <a> to abort the playbook (and keep your Oracle DB VM safe)..
+          Hit <enter> to continue and your Oracle DB VM will be destroyed.
 
     - name: Login to OLVM manager
       ovirt_auth:
