@@ -4,7 +4,7 @@ Automate deployment of Oracle Database Single Instance and RAC cluster using the
 
 Modules from the [ovirt.ovirt Ansible collection](https://docs.ansible.com/ansible/latest/collections/ovirt/ovirt/index.html) are used and should be downloaded before using the playbooks. Read the collection documentation page for additional explanation or for extending the functionality of the playbooks.
 
-The playbooks are tested with Ansible CLI commands on Oracle Linux and with Oracle Linux Automation Manager, but should run on other Ansible platforms too.
+The playbooks are tested with Ansible CLI commands on Oracle Linux and with Oracle Linux Automation Manager, but should run on other Ansible platforms too. The remote host is the OLVM engine to run the tasks of the playbook, make sure the ``python3-ovirt-engine-sdk4`` package exists on the engine host.
 
 ## How to setup a Oracle Database template in Oracle Linux Virtualization Manager
 
@@ -34,12 +34,14 @@ First step is the configuration of the playbook variables which are configured i
 The playbooks can be used on Oracle Linux 8 like this (change to your server names, passwords and ip addresses):
 
 ```console
-$ sudo dnf install oracle-ovirt-release-45-el8
-$ sudo dnf install python3-ovirt-engine-sdk4
 $ git clone https://github.com/jromers/ansible-olam.git
 $ cd ansible-olam/odb
 $ ansible-galaxy collection install -r requirements.yml
-$ export "OVIRT_URL=https://FQDN/ovirt-engine/api"
+$ cat << EOF >> hosts.ini
+[olvm]
+olvm-engine.demo.local
+EOF
+$ export "OVIRT_URL=https://olvm-engine.demo.local/ovirt-engine/api"
 $ export "OVIRT_USERNAME=admin@internal"
 $ export "OVIRT_PASSWORD=CHANGE_ME"
 ```
@@ -56,7 +58,8 @@ $ vi default_vars.yml
 Provide the values for the variables
 ...
 ...
-$ ansible-playbook -u cloud-user --key-file ~/.ssh/id_rsa \
+$ ansible-playbook -i hosts.ini \
+    -u <remote-ansible-user> --key-file ~/.ssh/<private-key> \
     -e "vm_name=odb-si" -e "vm_ip_address=192.168.1.25" \
     olvm_odb_si.yml
 ```
@@ -105,7 +108,9 @@ $ vi default_vars.yml
 Provide the values for the variables
 ...
 ...
-$ ansible-playbook -u cloud-user --key-file ~/.ssh/id_rsa olvm_odb_rac.yml
+$ ansible-playbook -i hosts.ini \
+    -u <remote-ansible-user> --key-file ~/.ssh/<private-key> \
+    olvm_odb_rac.yml
 ```
 
 

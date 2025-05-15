@@ -36,10 +36,56 @@
       tags:
         - always
 
-    - name: Verify and build ASM disks when HA is required
+    - block:
+      - name: Deploy VM from template {{ olvm_template }} - DHCP
+        ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          name: "{{ vm_name }}"
+          template: "{{ olvm_template }}"
+          description: "Cloned from {{ olvm_template }}"
+          cluster: "{{ olvm_cluster }}"
+          memory: "{{ vm_ram | default('4096MiB') }}"
+          cpu_sockets: "{{ vm_cpu | default('2') }}"
+          state: running
+          cloud_init:
+            host_name: "{{ vm_name }}"
+            user_name: cloud-user
+            authorized_ssh_keys: "{{ vm_user_sshpubkey }}"
+            timezone: "{{ vm_timezone | default('Etc/GMT')}}"
+            custom_script: |
+              runcmd:
+                - cd /u01/racovm
+                - ./GenerateNetconfig.sh -a
+                - ./buildsingle.sh -s
+                - touch /etc/cloud/cloud-init.disabled
+          wait: true
+
+      - meta: end_play
+      when:
+        - vm_ip_address is not defined
+
+    - name: Create VM from template {{ olvm_template }}
+      ovirt_vm:
+        auth: "{{ ovirt_auth }}"
+        name: "{{ vm_name }}"
+        template: "{{ olvm_template }}"
+        description: "Cloned from {{ olvm_template }}"
+        cluster: "{{ olvm_cluster }}"
+        memory: "{{ vm_ram | default('4096MiB') }}"
+        cpu_sockets: "{{ vm_cpu | default('2') }}"
+        high_availability: "{{ vm_ha | default('false') }}"
+        state: present
+
+    - name: Create temporary udev rules file
+      ansible.builtin.copy:
+        content: ""
+        dest: /tmp/70-deploycluster.rules
+        mode: "0644"
+
+    - name: Preconfigure configuration files and ASM disks when HA is enabled
       block:
       - name: Verify if ASM disk names are already in use
-        ansible.builtin.include_tasks: "odb_verify_asm.yml"
+        ansible.builtin.include_tasks: "verify_asm.yml"
         with_items:
           - "{{ asm_disks }}"
 
@@ -52,64 +98,61 @@
         when:
           - asm_disks_exists | length != 0
 
-      - name: Create temporary udev rules file
-        ansible.builtin.copy:
-          content: ""
-          dest: /tmp/70-deploycluster.rules
-          mode: "0644"
-
       - name: Create ASM disks for Oracle DB single instance, HA
-        ansible.builtin.include_tasks: "odb_build_asm.yml"
+        ansible.builtin.include_tasks: "build_asm.yml"
+        when:
+          - asm_disks_exists | length == 0
         with_items:
           - "{{ asm_disks }}"
 
-      - name: Fetch the generated udev rules file and store in buffer
-        fetch:
-          src: /tmp/70-deploycluster.rules
-          dest: buffer/
-          flat: yes
-      when:
+      - name: "Attach ASM disks to {{ vm_name }} VM when HA is used"
+        ovirt.ovirt.ovirt_disk:
+          auth: "{{ ovirt_auth }}"
+          name: "{{ item }}"
+          vm_name: "{{ vm_name }}"
+          interface: virtio_scsi
+          state: attached
+          activate: true
+        with_items:
+          - "{{ asm_disks }}"
+
+      - name: Create ASM device string foreach ASM disk
+        ansible.builtin.set_fact:
+          asm_dev_strings: "/dev/deploycluster/{{ ' /dev/deploycluster/'.join(asm_disks) }}"
+
+      - name: Create netconfig.ini file from template - with HA
+        ansible.builtin.template:
+          src: netconfig-siha-ini.j2
+          dest: /tmp/netconfig.ini
+      when: 
         - vm_ha == true
 
-    - name: Deploy VM from template {{ olvm_template }} - DHCP
-      ovirt_vm:
-        auth: "{{ ovirt_auth }}"
-        name: "{{ vm_name }}"
-        template: "{{ olvm_template }}"
-        description: "Cloned from {{ olvm_template }}"
-        cluster: "{{ olvm_cluster }}"
-        memory: "{{ vm_ram | default('4096MiB') }}"
-        cpu_sockets: "{{ vm_cpu | default('2') }}"
-        state: running
-        cloud_init:
-          host_name: "{{ vm_name }}"
-          user_name: cloud-user
-          authorized_ssh_keys: "{{ vm_user_sshpubkey }}"
-          timezone: "{{ vm_timezone }}"
-          custom_script: |
-            runcmd:
-              - cd /u01/racovm
-              - ./GenerateNetconfig.sh -a
-              - ./buildsingle.sh -s
-              - touch /etc/cloud/cloud-init.disabled
-        wait: true
-      when:
-        - vm_ip_address is not defined
+    - name: Create netconfig.ini file from template - without HA
+      ansible.builtin.template:
+        src: netconfig-si-ini.j2
+        dest: /tmp/netconfig.ini
+      when: 
+        - vm_ha == false
 
-    - name: Deploy VM from template {{ olvm_template }} - Static IP
+    - name: Get content of remote netconfig.ini file
+      slurp:
+        src: /tmp/netconfig.ini
+      register: netconfig_encoded
+
+    - name: Get content of remote udev rules file
+      slurp:
+        src: /tmp/70-deploycluster.rules
+      register: udev_rules_encoded
+
+    - name: Launch VM {{ vm_name }} with cloud_init
       ovirt_vm:
         auth: "{{ ovirt_auth }}"
         name: "{{ vm_name }}"
-        template: "{{ olvm_template }}"
-        description: "Cloned from {{ olvm_template }}"
-        cluster: "{{ olvm_cluster }}"
-        memory: "{{ vm_ram | default('4096MiB') }}"
-        cpu_sockets: "{{ vm_cpu | default('2') }}"
-        high_availability: "{{ vm_ha | default('false') }}"
         state: running
         cloud_init:
           host_name: "{{ vm_name + '.' + vm_dns_domain }}"
           user_name: cloud-user
+          root_password: welcome1
           authorized_ssh_keys: "{{ vm_user_sshpubkey }}"
           dns_servers: "{{ vm_dns }}"
           dns_search: "{{ vm_dns_domain }}"
@@ -118,139 +161,68 @@
           nic_ip_address: "{{ vm_ip_address }}"
           nic_gateway: "{{ vm_gateway }}"
           nic_netmask: "{{ vm_netmask }}"
-          timezone: "{{ vm_timezone | default('Etc/GMT')}}"
+          timezone: "{{ vm_timezone }}"
           custom_script: |
             write_files:
-              - content: |
-                  NODE1=
-                  NODE1IP=
+              - content: !!binary |
+                  {{ netconfig_encoded.content }}
                 path: /u01/racovm/netconfig.ini
                 owner: oracle:oinstall
                 permissions: "0644"
+                encoding: b64decode
+              - content: !!binary |
+                  {{ udev_rules_encoded.content }}
+                path: /root/70-deploycluster.rules
+                owner: root:root
+                permissions: "0644"
+                encoding: b64decode
+              - content: |
+                  #!/bin/bash
+                  if [ {{ vm_ha }} ]; then
+                    cp /root/70-deploycluster.rules /etc/udev/rules.d/70-deploycluster.rules
+                    /sbin/udevadm control -R
+                    /sbin/udevadm trigger -s block -c add
+                  fi
+                  cd /u01/racovm
+                  ./netconfig.sh -n1 -b
+                path: /root/start_from_ansible.sh
+                owner: root:root
+                permissions: "0755"
             runcmd:
+              - /root/start_from_ansible.sh
               - touch /etc/cloud/cloud-init.disabled
         wait: true
-      when:
-        - vm_ip_address is defined
 
-    - name: "Attach ASM disks to {{ vm_name }} VM when HA is used"
-      ovirt.ovirt.ovirt_disk:
-        auth: "{{ ovirt_auth }}"
-        name: "{{ item }}"
-        vm_name: "{{ vm_name }}"
-        interface: virtio_scsi
-        state: attached
-        activate: true
-      with_items:
-        - "{{ asm_disks }}"
-      when:
-        - vm_ha == true
 
-    - name: Cleanup OLVM auth token
-      ovirt_auth:
-        ovirt_auth: "{{ ovirt_auth }}"
-        state: absent
-
-    - name: Add host to in-memory hosts file
-      ansible.builtin.add_host:
-        name: "{{ vm_name + '.' + vm_dns_domain }}"
-        groups: odb_vm
-
-- name: Finalize the configuration and launch the buildsingle script
-  hosts: odb_vm
-  remote_user: cloud-user
-  become: yes
-  become_method: sudo
-  gather_facts: no
-  vars:
-    all_asm_disks_paths: ""
-  vars_files:
-    - default_vars.yml
-
-  tasks:
-
-    - name: End the play when the VM is provisioned with DHCP
-      block:
-      - name: Send message on how to monitor the Oracle DB build
-        debug:
-          msg: "VM deployed, check progress with 'ssh -i ~/.ssh/<private-key> cloud-user@<dhcp_address> tail -f /u01/racovm/buildsingle.log'"
-
-      - meta: end_play
-      delegate_to: localhost
-      when: 
-        - vm_ip_address is not defined
-
-    - name: Add ASM disk device names to OS when HA is used
-      block:
-      - name: Copy udev rules file
-        ansible.builtin.copy:
-          src: buffer/70-deploycluster.rules
-          dest: '/etc/udev/rules.d/70-deploycluster.rules'
-          owner: root
-          group: root
-          mode: '0644'
-
-      - name: Run udevadm to create device file
-        shell: |
-          /sbin/udevadm control -R
-          /sbin/udevadm trigger -s block -c add
-        args:
-          executable: /bin/bash
-
-      - name: Creat device strings for ASM disks
-        ansible.builtin.set_fact:
-          asm_dev_strings: "/dev/deploycluster/{{ ' /dev/deploycluster/'.join(asm_disks) }}"
-
-      - name: Create netconfig.ini file from template - with HA
-        ansible.builtin.template:
-          src: netconfig-siha-ini.j2
-          dest: /u01/racovm/netconfig.ini
-          owner: oracle
-          group: oinstall
-          mode: "0644"
-      when: 
-        - vm_ha == true
-
-    - name: Create netconfig.ini file from template - without HA
-      ansible.builtin.template:
-        src: netconfig-si-ini.j2
-        dest: /u01/racovm/netconfig.ini
-        owner: oracle
-        group: oinstall
-        mode: "0644"
-      when: 
-        - vm_ha == false
-
-    - name: Check if netconfig.sh was already done
-      stat:
-        path: /u01/racovm/.netconfig-done
-      register: netconfig
-
-    - name: Run netconfig.sh and launch buildsingle instance script
-      shell: |
-        cd /u01/racovm
-        ./netconfig.sh -n1 -b
-        touch /u01/racovm/.netconfig-done
-      args:
-        executable: /bin/bash
-      when:
-        - not netconfig.stat.exists
-
-- name: Remove the temporary files from the buffer and finish
+- name: Cleanup the environment
   hosts: olvm
   gather_facts: no
   vars_files:
     - default_vars.yml
 
   tasks:
+
+    - name: Remove OLVM auth token
+      ovirt_auth:
+        ovirt_auth: "{{ ovirt_auth }}"
+        state: absent
+
     - name: Remove artifacts
       ansible.builtin.file:
         state: absent
         path: "{{ item }}"
       loop:
-        - buffer
         - /tmp/70-deploycluster.rules
+        - /tmp/netconfig.ini
 
-    - name: Send message on how to monitor the Oracle DB build
+    - name: Send message on how to monitor the Oracle DB build - DHCP
+      debug:
+        msg: "VM deployed, check progress with 'ssh -i ~/.ssh/<private-key> cloud-user@<dhcp_address> tail -f /u01/racovm/buildsingle.log'"
+      when:
+        - vm_ip_address is not defined
+
+    - name: Send message on how to monitor the Oracle DB build - Static IP
       debug:
         msg: "VM deployed, check progress with 'ssh -i ~/.ssh/<private-key> cloud-user@{{ vm_name }} tail -f /u01/racovm/buildsingle.log'"
+      when:
+        - vm_ip_address is defined

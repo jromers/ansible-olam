@@ -84,7 +84,7 @@
         - always
 
     - name: Verify if ASM disk names are already in use
-      ansible.builtin.include_tasks: "odb_verify_asm.yml"
+      ansible.builtin.include_tasks: "verify_asm.yml"
       with_items:
         - "{{ asm_disks }}"
 
@@ -104,12 +104,12 @@
         mode: "0644"
 
     - name: Create ASM disks for Oracle RAC if not already done
-      ansible.builtin.include_tasks: "odb_build_asm.yml"
+      ansible.builtin.include_tasks: "build_asm.yml"
       with_items:
       - "{{ asm_disks }}"
 
     - name: Create RAC nodes 
-      ansible.builtin.include_tasks: "odb_build_racvm.yml"
+      ansible.builtin.include_tasks: "build_racvm.yml"
       loop: "{{ lookup('dict', rac_nodes, wantlist=True) }}"
       loop_control:
         loop_var: node
