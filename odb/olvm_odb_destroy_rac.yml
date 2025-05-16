@@ -13,7 +13,7 @@
         prompt: |
           WARNING!!!....Playbook paused...are you sure you want to destroy the cluster?
           Hit <ctrl-c> then <a> to abort the playbook (and keep your RAC safe)..
-          Hit <enter> to continue and  your RAC cluster will be destroyed.
+          Hit <enter> to continue and your RAC cluster (including ASM disks) will be destroyed.
 
     - name: Login to OLVM manager
       ovirt_auth:
