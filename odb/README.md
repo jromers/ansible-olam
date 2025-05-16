@@ -31,7 +31,7 @@ The following deployment scenarios can be used with the playbooks:
 
 First step is the configuration of the playbook variables which are configured in ``default_vars.yml`` file. Variables are required to configure your infrastructure settings for the OLVM server, VM and Database configuration and cloud-init. See below table for explanation of the variables. 
 
-The playbooks can be used on Oracle Linux 8 like this (change to your server names, passwords and ip addresses):
+The playbooks can be used on Oracle Linux like this (change to your server names, passwords and ip addresses):
 
 ```console
 $ git clone https://github.com/jromers/ansible-olam.git
