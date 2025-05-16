@@ -14,6 +14,8 @@
     nodeprivips: ""
     nodevips: ""
     nodevipips: ""
+    asm_disks_exists: [ ]
+    node_number: 0
   vars_files:
     - default_vars.yml
 
@@ -22,20 +24,6 @@
       community.crypto.openssh_keypair:
         path: '/tmp/id_rsa'
         mode: '0700'
-
-    - name: Fetch the unique OpenSSH private key and store in buffer
-      run_once: yes
-      fetch:
-        src: '/tmp/id_rsa'
-        dest: buffer/
-        flat: yes
-
-    - name: Fetch the unique OpenSSH public key and store in buffer
-      run_once: yes
-      fetch:
-        src: '/tmp/id_rsa.pub'
-        dest: buffer/
-        flat: yes
 
     - name: Build netconfig.ini variables from our RAC nodes dictionary (default_vars.yml)
       ansible.builtin.set_fact:
@@ -57,22 +45,6 @@
         dest: /tmp/netconfig.ini
         mode: "0644"
 
-    - name: Fetch the ready-to-use netconfig.ini file and store in buffer 
-      run_once: yes
-      fetch:
-        src: '/tmp/netconfig.ini'
-        dest: buffer/
-        flat: yes
-
-- name: Build the ASM disks and RAC nodes on the OLVM cluster
-  hosts: olvm
-  vars:
-    asm_disks_exists: [ ]
-    ansible_python_interpreter: "/usr/bin/python3"
-  vars_files:
-    - default_vars.yml
-
-  tasks:
     - name: Login to OLVM manager
       ovirt_auth:
         url: "{{ lookup('env', 'OVIRT_URL') }}"
@@ -114,128 +86,35 @@
       loop_control:
         loop_var: node
 
-    - name: Copy udev rules file to buffer
-      fetch:
+    - name: Get content of remote netconfig.ini file
+      slurp:
+        src: /tmp/netconfig.ini
+      register: netconfig_encoded
+
+    - name: Get content of remote udev rules file
+      slurp:
         src: /tmp/70-deploycluster.rules
-        dest: buffer/
-        flat: yes
+      register: udev_rules_encoded
 
-    - name: Cleanup OLVM auth token
-      ovirt_auth:
-        ovirt_auth: "{{ ovirt_auth }}"
-        state: absent
+    - name: Get content of generated remote private key file
+      slurp:
+        src: /tmp/id_rsa
+      register: id_rsa_encoded
 
-- hosts: rac_vms
-  become: yes
-  become_method: sudo
-  gather_facts: no
-  
-  vars_files:
-    - default_vars.yml
+    - name: Get content of generated remote public key file
+      slurp:
+        src: /tmp/id_rsa.pub
+      register: id_rsa_pub_encoded
 
-  tasks:
+    - name: Decode remote public key file content
+      set_fact:
+        id_rsa_pub: "{{id_rsa_pub_encoded.content | b64decode}}"
 
-    - name: set authorized key for passwordless ssh using local public key file
-      authorized_key:
-        user: root
-        state: present
-        key: "{{ lookup('file', 'buffer/id_rsa.pub') }}"
-
-    - name: copy unique SSH private key to first rac node
-      ansible.builtin.copy:
-        src: buffer/id_rsa
-        dest: '/root/.ssh/id_rsa'
-        mode: '0600'
-      when:
-        - ( inventory_hostname == "{{ rac_nodes.1.vm_name }}")
-
-    - name: copy unique SSH public key to first rac node
-      ansible.builtin.copy:
-        src: buffer/id_rsa.pub
-        dest: '/root/.ssh/id_rsa.pub'
-        mode: '0644'
-      when:
-        - ( inventory_hostname == "{{ rac_nodes.1.vm_name }}")
-
-    - name: Copy udev rules file
-      ansible.builtin.copy:
-        src: buffer/70-deploycluster.rules
-        dest: '/etc/udev/rules.d/70-deploycluster.rules'
-        owner: root
-        group: root
-        mode: '0644'
-
-    - name: Run udevadm to create device files
-      shell: |
-        /sbin/udevadm control -R
-        /sbin/udevadm trigger -s block -c add
-      args:
-        executable: /bin/bash
-
-    - name: Copy netconfig.ini file to /u01/racovm/netconfig.ini
-      ansible.builtin.copy:
-        src: buffer/netconfig.ini
-        dest: '/u01/racovm/netconfig.ini'
-        owner: oracle
-        group: oinstall
-        mode: '0644'
-
-- hosts: rac_vms,!rac_vm_first
-  become: yes
-  become_method: sudo
-  gather_facts: no
-  
-  vars_files:
-    - default_vars.yml
-
-  tasks:
-
-    - name: set node number in the RAC cluster
-      ansible.builtin.set_fact:
-        node_number: "{{ groups.rac_vms.index(inventory_hostname) }}"
-
-    - name: increase count of node number
-      ansible.builtin.set_fact:
-        node_number={{ node_number | int + 1 }}
-
-    - name: Check if netconfig.sh was already done
-      stat:
-        path: /u01/racovm/.netconfig-done
-      register: netconfig
-
-    - name: Run netconfig.sh 
-      shell: |
-        cd /u01/racovm
-        ./netconfig.sh -n{{node_number}}
-        touch /u01/racovm/.netconfig-done
-      args:
-        executable: /bin/bash
-      when:
-        - not netconfig.stat.exists
-
-- hosts: rac_vm_first
-  remote_user: cloud-user
-  become: yes
-  become_method: sudo
-  gather_facts: no
-  vars_files:
-    - default_vars.yml
-
-  tasks:
-    - name: Check if netconfig.sh was already done
-      stat:
-        path: /u01/racovm/.netconfig-done
-      register: netconfig
-
-    - name: Run netconfig.sh and launch buildcluster
-      shell: |
-        cd /u01/racovm
-        ./netconfig.sh -n1 -b
-        touch /u01/racovm/.netconfig-done
-      args:
-        executable: /bin/bash
-      when:
-        - not netconfig.stat.exists
+    - name: Launch all the RAC nodes
+      ansible.builtin.include_tasks: "launch_racvm.yml"
+      loop: "{{ lookup('dict', rac_nodes, wantlist=True) }}"
+      loop_control:
+        loop_var: node
 
 
 - hosts: olvm
@@ -244,12 +123,17 @@
     - default_vars.yml
 
   tasks:
+
+    - name: Cleanup OLVM auth token
+      ovirt_auth:
+        ovirt_auth: "{{ ovirt_auth }}"
+        state: absent
+
     - name: Remove artifacts
       ansible.builtin.file:
         state: absent
         path: "{{ item }}"
       loop:
-        - buffer
         - /tmp/id_rsa
         - /tmp/id_rsa.pub
         - /tmp/netconfig.ini

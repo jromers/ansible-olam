@@ -1,0 +1,72 @@
+---
+
+- name: increase count of node number
+  ansible.builtin.set_fact:
+    node_number={{ node_number | int + 1 }}
+
+- name: Launch RAC node (node {{node_number }}, {{ node.value.vm_name }}) with cloud_init
+  ovirt_vm:
+    auth: "{{ ovirt_auth }}"
+    name: "{{ node.value.vm_name }}"
+    state: running
+    cloud_init:
+      host_name: "{{ node.value.vm_name + '.' + vm_dns_domain }}"
+      user_name: cloud-user
+      authorized_ssh_keys: "{{ vm_user_sshpubkey }}"
+      dns_servers: "{{ vm_dns }}"
+      dns_search: "{{ vm_dns_domain }}"
+      nic_name: "{{ vm_pubadap | default('eth0') }}"
+      nic_boot_protocol: static
+      nic_ip_address: "{{ node.value.vm_ip_address }}"
+      nic_gateway: "{{ vm_gateway }}"
+      nic_netmask: "{{ vm_netmask }}"
+      timezone: "{{ vm_timezone }}"
+      custom_script: |
+        write_files:
+          - content: !!binary |
+              {{ netconfig_encoded.content }}
+            path: /u01/racovm/netconfig.ini
+            owner: oracle:oinstall
+            permissions: "0644"
+            encoding: b64decode
+          - content: !!binary |
+              {{ udev_rules_encoded.content }}
+            path: /etc/udev/rules.d/70-deploycluster.rules
+            owner: root:root
+            permissions: "0644"
+            encoding: b64decode
+          - content: !!binary |
+              {{ id_rsa_encoded.content }}
+            path: /root/.ssh/id_rsa
+            owner: root:root
+            permissions: "0600"
+            encoding: b64decode
+          - content: !!binary |
+              {{ id_rsa_pub_encoded.content }}
+            path: /root/.ssh/id_rsa.pub
+            owner: root:root
+            permissions: "0644"
+            encoding: b64decode
+          - content: |
+              #!/bin/bash
+              cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+              /sbin/udevadm control -R
+              /sbin/udevadm trigger -s block -c add
+              cd /u01/racovm
+              if [ {{ node_number }} -gt 1 ]; then
+                rm /root/.ssh/id_rsa
+                rm /root/.ssh/id_rsa.pub
+                ./netconfig.sh -n{{ node_number }}
+              elif [ {{ node_number }} -eq 1 ]; then
+                ./netconfig.sh -n1 -b
+              fi
+            path: /root/start_from_ansible.sh
+            owner: root:root
+            permissions: "0755"
+        runcmd:
+          - /root/start_from_ansible.sh
+          - touch /etc/cloud/cloud-init.disabled
+    wait: true
+
+
+
