@@ -20,6 +20,30 @@
     - default_vars.yml
 
   tasks:
+
+    - name: Login to OLVM manager
+      ovirt_auth:
+        url: "{{ lookup('env', 'OVIRT_URL') }}"
+        username: "{{ lookup('env', 'OVIRT_USERNAME') }}"
+        password: "{{ lookup('env', 'OVIRT_PASSWORD') }}"
+        ca_file: "{{ olvm_cafile | default('/etc/pki/ovirt-engine/ca.pem') }}"
+        insecure: "{{ olvm_insecure | default(true) }}"
+      tags:
+        - always
+
+    - name: Verify if ASM disk names are already in use
+      ansible.builtin.include_tasks: "verify_asm.yml"
+      with_items:
+        - "{{ asm_disks }}"
+
+    - name: Fail playbook as we detected ASM disks already in use
+      ansible.builtin.fail:
+        msg: |
+          Playbook failed...ASM disk(s) with name(s) {{ asm_disks_exists }} already in use.
+          Either remove the disks or change the ASM disk names before continuing to run this playbook.
+      when:
+        - asm_disks_exists | length != 0
+
     - name: Generate a unique OpenSSH keypair for passwordless ssh between RAC nodes
       community.crypto.openssh_keypair:
         path: '/tmp/id_rsa'
@@ -44,30 +68,6 @@
         src: netconfig-rac-ini.j2
         dest: /tmp/netconfig.ini
         mode: "0644"
-
-    - name: Login to OLVM manager
-      ovirt_auth:
-        url: "{{ lookup('env', 'OVIRT_URL') }}"
-        username: "{{ lookup('env', 'OVIRT_USERNAME') }}"
-        password: "{{ lookup('env', 'OVIRT_PASSWORD') }}"
-        ca_file: "{{ olvm_cafile | default('/etc/pki/ovirt-engine/ca.pem') }}"
-        insecure: "{{ olvm_insecure | default(true) }}"
-      tags:
-        - always
-
-    - name: Verify if ASM disk names are already in use
-      ansible.builtin.include_tasks: "verify_asm.yml"
-      with_items:
-        - "{{ asm_disks }}"
-
-    - name: Ask on how to continue as we detected ASM disks already in use
-      ansible.builtin.pause:
-        prompt: |
-          Playbook paused...ASM disk(s) with name(s) {{ asm_disks_exists }} already in use. 
-          Hit <ctrl-c> then <a> to abort when you want to protect the disks.
-          Hit <enter> to continue when you are sure the disks can be used.
-      when:
-        - asm_disks_exists | length != 0
 
     - name: Create temporary udev rules file
       ansible.builtin.copy:

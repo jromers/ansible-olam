@@ -71,12 +71,11 @@
         with_items:
           - "{{ asm_disks }}"
 
-      - name: Ask on how to continue as we detected ASM disks already in use
-        ansible.builtin.pause:
-          prompt: |
-            Playbook paused...ASM disk(s) with name(s) {{ asm_disks_exists }} already in use.
-            Hit <ctrl-c> then <a> to abort when you want to protect the disks.
-            Hit <enter> to continue when you are sure the disks can be used.
+      - name: Fail playbook as we detected ASM disks already in use
+        ansible.builtin.fail:
+          msg: |
+            Playbook failed...ASM disk(s) with name(s) {{ asm_disks_exists }} already in use.
+            Either remove the disks or change the ASM disk names before continuing to run this playbook.
         when:
           - asm_disks_exists | length != 0
       when: 
