@@ -4,7 +4,7 @@
 # default infrastrcuture variables
 #
 
-- name: Generate SSH keys and configuration files before building VMs
+- name: Prepare configuration files, verify storage and build RAC VMs
   hosts: olvm
   gather_facts: no
   vars:
