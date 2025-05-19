@@ -141,4 +141,4 @@
 
     - name: Print out VM logfile information
       debug:
-        msg: "RAC VMs deployed, check progress with 'ssh -i ~/.ssh/<private-key> cloud-user@{{ rac_nodes.1.vm_name }} tail -f /u01/racovm/buildcluster.log'"
+        msg: "RAC VMs deployed, check progress with 'ssh -i ~/.ssh/<private-key> cloud-user@<1st rac node> tail -f /u01/racovm/buildcluster.log'"
