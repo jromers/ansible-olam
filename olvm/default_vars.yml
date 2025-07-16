@@ -1,7 +1,7 @@
 # This file containes password for the root user for the VM. If you 
 # add the passwords in clear-text, you may encrypt this file using the 
 # ansible-vault command to protect the passwords (alternative is to 
-# use -e "vm_root_passwd=XXX" in CLI:
+# use -e "vm_passwd=XXX" in CLI:
 #
 #     $ ansible-vault encrypt default_vars.yml
 #
@@ -17,7 +17,7 @@ vm_cpu: 2
 
 # Variables used for cloud-init:
 
-vm_root_passwd: CHANGE_ME
+vm_passwd: CHANGE_ME
 vm_dns: 192.168.1.3
 vm_dns_domain: demo.local
 vm_gateway: 192.168.1.1

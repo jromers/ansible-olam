@@ -12,6 +12,7 @@
     cloud_init:
       host_name: "{{ node.value.vm_name + '.' + vm_dns_domain }}"
       user_name: cloud-user
+      root_password: "{{ vm_passwd }}"
       authorized_ssh_keys: "{{ vm_user_sshpubkey }}"
       dns_servers: "{{ vm_dns }}"
       dns_search: "{{ vm_dns_domain }}"

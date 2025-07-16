@@ -100,13 +100,13 @@ The CA file can be downloaded from the main OLVM web portal or directly from the
 | vm_ip_address | 192.168.1.100 | Static IP address of VM, if DHCP is required cloud-init section in playbook should be changed
 | vm_ram | 2048MiB | Amount of memory of the VM
 | vm_cpu | 4 | Number of virtual CPUs sockets of the VM
-| vm_root_passwd | your_secret_root_pw | Root password of the VM, used bu cloud-init
 | vm_dns | 192.168.1.3 | DNS server to be used for VM
 | vm_dns_domain | demo.local | DNS domainto to be used for VM
 | vm_gateway | 192.168.1.1 | Default gateway to be used for VM
 | vm_netmask | 255.255.255.0 | Netmask to be used for VM
 | vm_timezone | Europe/Amsterdam | Timezone for VM
 | vm_user | opc | Standard user for Oracle provided template, otherwise use your own or root user
+| vm_passwd | your_secret_pw | Password of defined VM user, used by cloud-init
 | vm_user_sshpubkey | "ssh-rsa AAAA...YOUR KEY HERE...hj8= " | SSH Public key for stndard user
 | src_vm | oltest | VM used as source VM for cloning operation
 | src_vm_snapshot | base_snapshot | Name of snapshot of source VM, for cloning operation 
