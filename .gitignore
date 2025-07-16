@@ -1,4 +1,3 @@
 .git
 venv/**
-default_vars.yml
 hosts.ini

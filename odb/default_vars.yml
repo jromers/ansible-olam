@@ -1,0 +1,7 @@
+#
+# Configuration for deployment of Oracle Database templates
+#
+# Dummy variables file for the single-node and rac playbooks. Make
+# sure you overwite this file with one of the example files and
+# adjust the settings to your specific infrastructure.
+#
