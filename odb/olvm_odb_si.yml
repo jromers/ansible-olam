@@ -168,7 +168,7 @@
             write_files:
               - content: !!binary |
                   {{ netconfig_encoded.content }}
-                path: /u01/racovm/netconfig.ini
+                path: /root/netconfig.ini
                 owner: oracle:oinstall
                 permissions: "0644"
                 encoding: b64decode
@@ -185,6 +185,7 @@
                     /sbin/udevadm control -R
                     /sbin/udevadm trigger -s block -c add
                   fi
+                  cp /root/netconfig.ini /u01/racovm/netconfig.ini
                   cd /u01/racovm
                   ./netconfig.sh -n1 -b
                 path: /root/start_from_ansible.sh
