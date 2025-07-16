@@ -156,13 +156,13 @@
           user_name: cloud-user
           root_password: "{{ vm_passwd }}"
           authorized_ssh_keys: "{{ vm_user_sshpubkey }}"
-          dns_servers: "{{ vm_dns }}"
-          dns_search: "{{ vm_dns_domain }}"
-          nic_name: "{{ vm_pubadap | default('eth0') }}"
-          nic_boot_protocol: static
-          nic_ip_address: "{{ vm_ip_address }}"
-          nic_gateway: "{{ vm_gateway }}"
-          nic_netmask: "{{ vm_netmask }}"
+          # dns_servers: "{{ vm_dns }}"
+          # dns_search: "{{ vm_dns_domain }}"
+          # nic_name: "{{ vm_pubadap | default('eth0') }}"
+          # nic_boot_protocol: static
+          # nic_ip_address: "{{ vm_ip_address }}"
+          # nic_gateway: "{{ vm_gateway }}"
+          # nic_netmask: "{{ vm_netmask }}"
           timezone: "{{ vm_timezone }}"
           custom_script: |
             write_files:
