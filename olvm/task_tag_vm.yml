@@ -2,6 +2,7 @@
 
 - name: "Insert all tags for VM"
   ovirt.ovirt.ovirt_tag:
+    auth: "{{ ovirt_auth }}"
     name: "{{ item }}"
     state: attached
     vms:
