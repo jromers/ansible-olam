@@ -1,9 +1,9 @@
 ---
 
--name: insert all tags for VM
- ovirt.ovirt.ovirt_tag:
-   name: "{{ item }}"
-   state: attached
-   vms:
-     - "{{ vm_node }}"
- with_items: "{{ hostvars[vm_node]['vm_tags'] }}"
+- name: "Insert all tags for VM"
+  ovirt.ovirt.ovirt_tag:
+    name: "{{ item }}"
+    state: attached
+    vms:
+      - "{{ vm_node }}"
+  with_items: "{{ hostvars[vm_node]['vm_tags'] }}"
