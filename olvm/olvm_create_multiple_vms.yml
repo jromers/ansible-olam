@@ -51,6 +51,12 @@
         wait: true
       loop: "{{ groups['instances'] }}"
 
+    - name: Tag Virtual Machine
+      ansible.builtin.include_tasks: "task_tag_vm.yml"
+      loop: "{{ groups['instances'] }}"
+      loop_control:
+        loop_var: vm_node
+
     - name: Cleanup OLVM auth token
       ovirt.ovirt.ovirt_auth:
         ovirt_auth: "{{ ovirt_auth }}"
