@@ -19,34 +19,11 @@
       tags:
         - always
 
-- hosts: all,!olvm
-  become: yes
-  become_method: sudo
-  gather_facts: yes
-
-  vars_files:
-    - default_vars.yml
-
-  tasks:
-
     - name: Tag Virtual Machine
-      ovirt.ovirt.ovirt_tag:
-        name: "{{ item }}"
-        state: attached
-        vms:
-          - "{{ inventory_hostname }"
-      with_items:
-        - "{{ vm_tags }}"
-
-- hosts: olvm
-  become: yes
-  become_method: sudo
-  gather_facts: yes
-
-  vars_files:
-    - default_vars.yml
-
-  tasks:
+      ansible.builtin.include_tasks: "task_tag_vm.yml"
+      loop: "{{ groups['instances'] }}"
+      loop_control:
+        loop_var: vm_node
 
     - name: Cleanup OLVM auth token
       ovirt.ovirt.ovirt_auth:
