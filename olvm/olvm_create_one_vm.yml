@@ -35,6 +35,7 @@
         memory: "{{ vm_ram }}"
         cpu_sockets: "{{ vm_cpu }}"
         high_availability: true
+        clone: "{{ vm_disk_cloned | default(false) }}"
         state: running
         wait: yes
         cloud_init:
