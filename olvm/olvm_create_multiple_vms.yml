@@ -52,7 +52,7 @@
       loop: "{{ groups['instances'] }}"
 
     - name: Tag Virtual Machine
-      ansible.builtin.include_tasks: "task_tag_vm.yml"
+      ansible.builtin.include_tasks: "tasks_tag_vm.yml"
       loop: "{{ groups['instances'] }}"
       loop_control:
         loop_var: vm_node

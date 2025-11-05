@@ -11,13 +11,17 @@ The playbooks uses modules from the [ovirt.ovirt Ansible collection](https://doc
 
 First step is the configuration of the playbook variables which are mostly configured in ``default_vars.yml`` file. Variables may be used in the command line when not configured in the default variables file. Variables are required to configure your infrastructure settings for the OLVM server, VM configuration and cloud-init. See below table for explanation of the variables. 
 
-The playbooks can be used like this:
+Run the playbooks in a python virtual environment, it can be used like this:
 
 ```console
-$ git clone https://github.com/jromers/ansible-olam.git
-$ cd ansible-olam/olvm
+$ python3 -m venv venv
+$ source venv/bin/activate
+$ pip install ansible
+$ source venv/bin/activate
 $ ansible-galaxy collection install -f ovirt.ovirt
 $ ansible-galaxy collection install -f community.general
+$ git clone https://github.com/jromers/ansible-olam.git
+$ cd ansible-olam/olvm
 $ vi default_vars.yml
 $ export "OVIRT_URL=https://OLVM-FQDN/ovirt-engine/api"
 $ export "OVIRT_USERNAME=admin@internal"
@@ -39,11 +43,18 @@ $ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
 # live migrate a VM
 $ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
     -e "vm_name=vm01" -e "dst_kvmhost=KVM2" olvm_migrate_vm.yml
+
+# live storage migration, all VM disks from a source domain to a destination domain
+$ ansible-playbook -i inventory/hosts.ini -u opc --key-file ~/.ssh/id_rsa \
+    --extra-vars "src_storage=XXX" \
+    --extra-vars "dst_storage=YYY"   olvm_migrate_disk.yml
 ```
 
 Note 1: using the OLVM server FQDN (in this example olvm-engine.demo.local), appended with a comma, is a quick-way to not use a inventory file.
 
-Note 2: as it includes clear-text password, for better security you may want to encrypt the ``default_vars.yml`` file with the ansible-vault command. When running the playbook, ansible asks for a secret to decrypt the yml-file.
+Note 2: for live storage migration ensure for thin-provisioned disks depending on a template, you should first copy the template to the destination storage domain before running the playbook.
+
+Note 3: as it includes clear-text password, for better security you may want to encrypt the ``default_vars.yml`` file with the ansible-vault command. When running the playbook, ansible asks for a secret to decrypt the yml-file.
 
 ```
 $ ansible-vault encrypt default_vars.yml
@@ -112,6 +123,8 @@ The CA file can be downloaded from the main OLVM web portal or directly from the
 | src_vm_snapshot | base_snapshot | Name of snapshot of source VM, for cloning operation 
 | dst_vm | oltest_cloned | Name of destination VM for cloning operation
 | dst_kvmhost | KVM2 | Name (not hostname) of kvm host in OLVM cluster and destination for live-migration
+| src_storage | VMdomain1 | Name of the source storage domain used for live storage migration
+| dst_storage | VMdomain2 | Name of the destination storage domain used for live storage migration
 | vm_id | 76c76c8b-a9ad-414e-8274-181a1ba8948b | VM ID for the VM, used for rename of VM
 | vm_newname | oltest | New name for VM with vm_id, used for rename of VM
 | olvm_insecure | false | By default ``true``, but define ``false`` in case you need secure API connection
