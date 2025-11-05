@@ -47,7 +47,7 @@ $ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
 # live storage migration, all VM disks from a source domain to a destination domain
 $ ansible-playbook -i inventory/hosts.ini -u opc --key-file ~/.ssh/id_rsa \
     --extra-vars "src_storage=XXX" \
-    --extra-vars "dst_storage=YYY"   olvm_migrate_disk.yml
+    --extra-vars "dst_storage=YYY"   olvm_migrate_storage.yml
 ```
 
 Note 1: using the OLVM server FQDN (in this example olvm-engine.demo.local), appended with a comma, is a quick-way to not use a inventory file.

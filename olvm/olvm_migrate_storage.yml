@@ -14,7 +14,7 @@
 # ansible-playbook -i inventory/hosts.ini \
 #     -u <ssh-user> --key-file ~/.ssh/private-key \
 #     --extra-vars "src_storage=XXX" \
-#     --extra-vars "dst_storage=YYY"   olvm_migrate_disk.yml
+#     --extra-vars "dst_storage=YYY"   olvm_migrate_storage.yml
 #
 
 - hosts: olvm
