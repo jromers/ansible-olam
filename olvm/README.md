@@ -26,26 +26,29 @@ $ vi default_vars.yml
 $ export "OVIRT_URL=https://OLVM-FQDN/ovirt-engine/api"
 $ export "OVIRT_USERNAME=admin@internal"
 $ export "OVIRT_PASSWORD=CHANGE_ME"
-
+$ cat << EOF >> hosts.ini
+[olvm]
+olvm-engine.demo.local
+EOF
 # create a single VM
-$ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
+$ ansible-playbook -i hosts.ini -u opc --key-file ~/.ssh/id_rsa \
     -e "vm_name=vm01" -e "vm_ip_address=192.168.1.101" \
     olvm_create_one_vm.yml
 
-# create multiple VMs with inventory file, see example hosts.ini file
-$ ansible-playbook -i hosts.ini -u opc --key-file ~/.ssh/id_rsa \
+# create multiple VMs with inventory file, see example hosts-example.ini file
+$ ansible-playbook -i inventory/hosts-example.ini -u opc --key-file ~/.ssh/id_rsa \
     olvm_create_multiple_vms.yml
 
 # delete a VM
-$ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
+$ ansible-playbook -i hosts.ini -u opc --key-file ~/.ssh/id_rsa \
     -e "vm_name=vm01" olvm_delete_vm.yml
 
 # live migrate a VM
-$ ansible-playbook -i olvm-engine.demo.local, -u opc --key-file ~/.ssh/id_rsa \
+$ ansible-playbook -i hosts.ini -u opc --key-file ~/.ssh/id_rsa \
     -e "vm_name=vm01" -e "dst_kvmhost=KVM2" olvm_migrate_vm.yml
 
 # live storage migration, all VM disks from a source domain to a destination domain
-$ ansible-playbook -i inventory/hosts.ini -u opc --key-file ~/.ssh/id_rsa \
+$ ansible-playbook -i hosts.ini -u opc --key-file ~/.ssh/id_rsa \
     --extra-vars "src_storage=XXX" \
     --extra-vars "dst_storage=YYY"   olvm_migrate_storage.yml
 ```
