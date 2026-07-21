@@ -23,6 +23,8 @@
             private_ip: "{{ instance_ip }}"
         metadata:
             ssh_authorized_keys: "{{ ssh_public_key }}"
+        instance_options:
+            are_legacy_imds_endpoints_disabled: true
         freeform_tags: "{{ my_tags }}"
       register: result
 
