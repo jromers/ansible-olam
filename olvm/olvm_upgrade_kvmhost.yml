@@ -39,7 +39,7 @@
         - name: Find hosts in cluster
           ovirt.ovirt.ovirt_host_info:
             auth: "{{ ovirt_auth }}"
-            pattern: "cluster={{ cluster_name }}"
+            pattern: "cluster={{ olvm_cluster }}"
             all_content: true
           register: cluster_hosts
 
@@ -72,7 +72,7 @@
         - name: Refresh host status after upgrades
           ovirt.ovirt.ovirt_host_info:
             auth: "{{ ovirt_auth }}"
-            pattern: "cluster={{ cluster_name }}"
+            pattern: "cluster={{ olvm_cluster }}"
             all_content: true
           register: final_cluster_hosts
 
