@@ -53,21 +53,21 @@
             msg: >-
               Found {{ cluster_hosts.ovirt_hosts | length }} host(s):
               {{ cluster_hosts.ovirt_hosts | map(attribute='name') | join(', ') }}
-#
-#        - name: Upgrade each host synchronously with reboot
-#          ovirt.ovirt.ovirt_host:
-#            auth: "{{ ovirt_auth }}"
-#            name: "{{ item.name }}"
-#            state: upgraded
-#            check_upgrade: "{{ check_upgrade | default('true', true) | bool }}"
-#            reboot_after_upgrade: "{{ reboot_after_upgrade  | default('true', true) | bool }}"
-#            wait: true
-#            timeout: "{{ host_upgrade_timeout | default('7200', true) | int }}"
-#            poll_interval: "{{ host_poll_interval | default('30', true) | int }}"
-#          loop: "{{ cluster_hosts.ovirt_hosts }}"
-#          loop_control:
-#            label: "{{ item.name }}"
-#          register: upgraded_hosts
+
+        - name: Upgrade each host synchronously with reboot
+          ovirt.ovirt.ovirt_host:
+            auth: "{{ ovirt_auth }}"
+            name: "{{ item.name }}"
+            state: upgraded
+            check_upgrade: "{{ check_upgrade | default('true', true) | bool }}"
+            reboot_after_upgrade: "{{ reboot_after_upgrade  | default('true', true) | bool }}"
+            wait: true
+            timeout: "{{ host_upgrade_timeout | default('7200', true) | int }}"
+            poll_interval: "{{ host_poll_interval | default('30', true) | int }}"
+          loop: "{{ cluster_hosts.ovirt_hosts }}"
+          loop_control:
+            label: "{{ item.name }}"
+          register: upgraded_hosts
 
         - name: Refresh host status after upgrades
           ovirt.ovirt.ovirt_host_info:
