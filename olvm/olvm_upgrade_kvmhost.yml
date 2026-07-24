@@ -1,0 +1,91 @@
+---
+
+# Configure default_vars.yml to setup default infrastrcuture variables
+#
+# Define following variables as extra-vars:
+#   --extra-vars "aaa=bbb"
+#   --extra-vars "ccc=ddd"
+
+- hosts: olvm
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+
+  vars_files:
+    - default_vars.yml
+
+  tasks:
+
+    - name: Login to OLVM manager
+      ovirt_auth:
+        url: "{{ lookup('env', 'OVIRT_URL') }}"
+        username: "{{ lookup('env', 'OVIRT_USERNAME') }}"
+        password: "{{ lookup('env', 'OVIRT_PASSWORD') }}"
+        ca_file: "{{ olvm_cafile | default('/etc/pki/ovirt-engine/ca.pem') }}"
+        insecure: "{{ olvm_insecure | default(true) }}"
+      tags:
+        - always
+
+    - name: Validate that OLVM cluster name is defined
+      ansible.builtin.assert:
+        that:
+          - olvm_cluster is defined
+          - olvm_cluster | length > 0
+        fail_msg: >-
+          Provide olvm_cluster as an extra variable 
+
+    - name: Upgrade hosts in cluster {{ olvm_cluster }}
+      block:
+        - name: Find hosts in cluster
+          ovirt.ovirt.ovirt_host_info:
+            auth: "{{ ovirt_auth }}"
+            pattern: "cluster={{ cluster_name }}"
+            all_content: true
+          register: cluster_hosts
+
+        - name: Stop when cluster has no hosts
+          ansible.builtin.fail:
+            msg: "No hosts found in cluster '{{ olvm_cluster }}'."
+          when: cluster_hosts.ovirt_hosts | length == 0
+
+        - name: Show hosts selected for upgrade
+          ansible.builtin.debug:
+            msg: >-
+              Found {{ cluster_hosts.ovirt_hosts | length }} host(s):
+              {{ cluster_hosts.ovirt_hosts | map(attribute='name') | join(', ') }}
+
+        - name: Upgrade each host synchronously with reboot
+          ovirt.ovirt.ovirt_host:
+            auth: "{{ ovirt_auth }}"
+            name: "{{ item.name }}"
+            state: upgraded
+            check_upgrade: "{{ check_upgrade | default('true', true) | bool }}"
+            reboot_after_upgrade: "{{ reboot_after_upgrade  | default('true', true) | bool }}"
+            wait: true
+            timeout: "{{ host_upgrade_timeout | default('7200', true) | int }}"
+            poll_interval: "{{ host_poll_interval | default('30', true) | int }}"
+          loop: "{{ cluster_hosts.ovirt_hosts }}"
+          loop_control:
+            label: "{{ item.name }}"
+          register: upgraded_hosts
+
+        - name: Refresh host status after upgrades
+          ovirt.ovirt.ovirt_host_info:
+            auth: "{{ ovirt_auth }}"
+            pattern: "cluster={{ cluster_name }}"
+            all_content: true
+          register: final_cluster_hosts
+
+        - name: Show final host state
+          ansible.builtin.debug:
+            msg: >-
+              {{ item.name }} status={{ item.status | default('unknown') }}
+              update_available={{ item.update_available | default('unknown') }}
+          loop: "{{ final_cluster_hosts.ovirt_hosts }}"
+          loop_control:
+            label: "{{ item.name }}"
+
+    - name: Cleanup OLVM auth token
+      ovirt_auth:
+        ovirt_auth: "{{ ovirt_auth }}"
+        state: absent
